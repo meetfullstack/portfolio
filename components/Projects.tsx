@@ -37,7 +37,15 @@ const projects: Project[] = [
   },
 ];
 
+const fadeUp = (delay: number) => ({
+  initial: { opacity: 0, y: 30 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true },
+  transition: { duration: 0.6, delay },
+});
+
 function ProjectCard({ project, index }: { project: Project; index: number }) {
+  const num = String(index + 1).padStart(2, "0");
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
@@ -45,45 +53,50 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
       viewport={{ once: true }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
       whileHover={{ y: -4 }}
-      className="glass flex flex-col rounded-2xl p-6 transition-all"
+      className="card flex flex-col p-8"
     >
-      <p className="section-number mb-2">
-        project.{String(index + 1).padStart(2, "0")}
-      </p>
-      <h3 className="text-lg font-semibold">{project.title}</h3>
-      <p className="mt-2 flex-1 text-sm leading-relaxed text-gray-500">
+      <p className="section-tag mb-3">project.{num}</p>
+      <h3 className="text-xl font-semibold">{project.title}</h3>
+      <p
+        className="mt-3 flex-1 text-sm leading-relaxed"
+        style={{ color: "var(--text-secondary)" }}
+      >
         {project.description}
       </p>
-      <div className="mt-4 flex flex-wrap gap-2">
+      <div className="mt-6 flex flex-wrap gap-2">
         {project.tech.map((t) => (
           <span
             key={t}
-            className="rounded-full border border-purple-500/30 bg-purple-500/10 px-3 py-1 text-xs font-medium text-purple-400"
+            className="rounded-full px-3 py-1 text-xs font-medium"
+            style={{
+              border: "1px solid rgba(168, 85, 247, 0.25)",
+              background: "rgba(168, 85, 247, 0.08)",
+              color: "#a855f7",
+            }}
           >
             {t}
           </span>
         ))}
       </div>
-      <div className="mt-4 flex gap-4 text-sm font-medium">
+      <div className="mt-6 flex gap-4 text-sm font-medium">
         {project.github !== "" ? (
           /* Added missing '<a' */
           <a
             href={project.github}
             target="_blank"
             rel="noopener noreferrer"
-            className="accent-text hover:opacity-80 transition-opacity"
+            className="accent-text transition-opacity hover:opacity-70"
           >
             GitHub →
           </a>
         ) : null}
-
         {project.live !== "" ? (
           /* Added missing '<a' */
           <a
             href={project.live}
             target="_blank"
             rel="noopener noreferrer"
-            className="accent-text hover:opacity-80 transition-opacity"
+            className="accent-text transition-opacity hover:opacity-70"
           >
             Live →
           </a>
@@ -95,31 +108,30 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
 
 export default function Projects() {
   return (
-    <section id="projects" className="mx-auto max-w-5xl px-6 py-24">
-      <motion.p
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.5 }}
-        className="section-number mb-2"
-      >
-        02 // projects.work
-      </motion.p>
+    <section
+      id="projects"
+      style={{
+        paddingTop: "var(--section-gap)",
+        paddingBottom: "var(--section-gap)",
+      }}
+    >
+      <div className="container">
+        <motion.p {...fadeUp(0)} className="section-tag mb-3">
+          02 // projects.work
+        </motion.p>
 
-      <motion.h2
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.5, delay: 0.1 }}
-        className="text-3xl font-bold sm:text-4xl"
-      >
-        Things I have built
-      </motion.h2>
+        <motion.h2
+          {...fadeUp(0.1)}
+          className="text-4xl font-bold tracking-tight sm:text-5xl"
+        >
+          Things I have built
+        </motion.h2>
 
-      <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {projects.map((project, i) => (
-          <ProjectCard key={project.title} project={project} index={i} />
-        ))}
+        <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {projects.map((project, i) => (
+            <ProjectCard key={project.title} project={project} index={i} />
+          ))}
+        </div>
       </div>
     </section>
   );

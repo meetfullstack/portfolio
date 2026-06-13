@@ -1,46 +1,61 @@
+"use client";
+
 import Link from "next/link";
+import { motion } from "framer-motion";
 import ThemeToggle from "@/components/ThemeToggle";
 
 export default function Nav() {
   return (
-    <header className="sticky top-0 z-50 glass border-b border-white/10">
-      <nav className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-        <Link href="/" className="font-mono text-sm accent-text font-bold">
-          meet.upadhyay
+    <motion.header
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="sticky top-0 z-50"
+      style={{
+        background: "var(--glass-bg)",
+        backdropFilter: "blur(20px)",
+        WebkitBackdropFilter: "blur(20px)",
+        borderBottom: "1px solid var(--border)",
+      }}
+    >
+      <div className="container flex items-center justify-between py-5">
+        <Link href="/" className="font-mono text-sm font-bold accent-text">
+          meet.dev
         </Link>
-        <ul
-          className="flex items-center gap-6 text-sm"
-          style={{ color: "var(--text-secondary)" }}
-        >
-          <li>
-            <a
-              href="#about"
-              className="hover:text-purple-400 transition-colors"
-            >
-              About
-            </a>
-          </li>
-          <li>
-            <a
-              href="#projects"
-              className="hover:text-purple-400 transition-colors"
-            >
-              Projects
-            </a>
-          </li>
-          <li>
-            <a
-              href="#contact"
-              className="hover:text-purple-400 transition-colors"
-            >
-              Contact
-            </a>
-          </li>
-          <li>
-            <ThemeToggle />
-          </li>
-        </ul>
-      </nav>
-    </header>
+
+        <nav className="flex items-center gap-8">
+          <ul className="hidden sm:flex items-center gap-8">
+            <li>
+              {/* Added missing '<a' */}
+              <a
+                href="#about"
+                className="section-comment transition-colors hover:text-purple-400"
+              >
+                about
+              </a>
+            </li>
+            <li>
+              {/* Added missing '<a' */}
+              <a
+                href="#projects"
+                className="section-comment transition-colors hover:text-purple-400"
+              >
+                projects
+              </a>
+            </li>
+            <li>
+              {/* Added missing '<a' */}
+              <a
+                href="#contact"
+                className="section-comment transition-colors hover:text-purple-400"
+              >
+                contact
+              </a>
+            </li>
+          </ul>
+          <ThemeToggle />
+        </nav>
+      </div>
+    </motion.header>
   );
 }

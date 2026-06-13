@@ -1,38 +1,61 @@
+import Link from "next/link";
+
 export default function Footer() {
   return (
-    <footer className="mt-24 border-t border-gray-200">
-      <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-4 px-6 py-8 text-sm text-gray-600 sm:flex-row">
-        <p>© {new Date().getFullYear()} Meet Upadhyay</p>
-        <ul className="flex gap-6">
-          <li>
-            <a
-              href="https://github.com/meetfullstack"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-black"
-            >
-              GitHub
-            </a>
-          </li>
-          <li>
-            <a
-              href="https://www.linkedin.com/in/meetupadhy/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-black"
-            >
-              LinkedIn
-            </a>
-          </li>
-          <li>
-            <a
-              href="mailto:meetupadhyay158@gmail.com"
-              className="hover:text-black"
-            >
-              Email
-            </a>
-          </li>
-        </ul>
+    <footer
+      style={{
+        borderTop: "1px solid var(--border)",
+        paddingTop: "3rem",
+        paddingBottom: "3rem",
+      }}
+    >
+      <div className="container flex flex-col items-start justify-between gap-8 sm:flex-row sm:items-center">
+        <div>
+          <Link href="/" className="font-mono text-sm font-bold accent-text">
+            meet.dev
+          </Link>
+          <p className="mt-2 text-xs" style={{ color: "var(--text-muted)" }}>
+            Built with Next.js 16, Tailwind CSS, and Framer Motion.
+          </p>
+          <p className="mt-1 text-xs" style={{ color: "var(--text-muted)" }}>
+            © {new Date().getFullYear()} Meet Upadhyay
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <p className="section-tag mb-1">links</p>
+
+          {/* Added missing '<a' */}
+          <a
+            href="https://github.com/meetfullstack"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm transition-colors hover:text-purple-400"
+            style={{ color: "var(--text-secondary)" }}
+          >
+            GitHub
+          </a>
+
+          {/* Added missing '<a' */}
+          <a
+            href="https://linkedin.com/in/your-handle"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm transition-colors hover:text-purple-400"
+            style={{ color: "var(--text-secondary)" }}
+          >
+            LinkedIn
+          </a>
+
+          {/* Added missing '<a' */}
+          <a
+            href="mailto:you@example.com"
+            className="text-sm transition-colors hover:text-purple-400"
+            style={{ color: "var(--text-secondary)" }}
+          >
+            Email
+          </a>
+        </div>
       </div>
     </footer>
   );
