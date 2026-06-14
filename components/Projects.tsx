@@ -65,15 +65,7 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
       </p>
       <div className="mt-6 flex flex-wrap gap-2">
         {project.tech.map((t) => (
-          <span
-            key={t}
-            className="rounded-full px-3 py-1 text-xs font-medium"
-            style={{
-              border: "1px solid rgba(168, 85, 247, 0.25)",
-              background: "rgba(168, 85, 247, 0.08)",
-              color: "#a855f7",
-            }}
-          >
+          <span key={t} className="tag">
             {t}
           </span>
         ))}
@@ -119,14 +111,12 @@ export default function Projects() {
         <motion.p {...fadeUp(0)} className="section-tag mb-3">
           02 // projects.work
         </motion.p>
-
         <motion.h2
           {...fadeUp(0.1)}
           className="text-4xl font-bold tracking-tight sm:text-5xl"
         >
           Things I have built
         </motion.h2>
-
         <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {projects.map((project, i) => (
             <ProjectCard key={project.title} project={project} index={i} />

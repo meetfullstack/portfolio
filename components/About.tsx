@@ -37,14 +37,12 @@ export default function About() {
         <motion.p {...fadeUp(0)} className="section-tag mb-3">
           01 // about.me
         </motion.p>
-
         <motion.h2
           {...fadeUp(0.1)}
           className="text-4xl font-bold tracking-tight sm:text-5xl"
         >
           Who I am
         </motion.h2>
-
         <div className="mt-12 grid gap-5 sm:grid-cols-2">
           <motion.div {...fadeUp(0.2)} className="card p-8">
             <p className="section-tag mb-4">background</p>
@@ -58,7 +56,6 @@ export default function About() {
               web applications, and backend services with NestJS.
             </p>
           </motion.div>
-
           <motion.div {...fadeUp(0.3)} className="card p-8">
             <p className="section-tag mb-4">focus</p>
             <p
@@ -66,13 +63,11 @@ export default function About() {
               style={{ color: "var(--text-secondary)" }}
             >
               Lately going deep on agentic development workflows — building with
-              Claude Code, Codex CLI, and Cursor. I enjoy working across the
-              full stack and am currently open to software engineering and
-              Data/AI roles in Toronto and remote.
+              Claude Code, Codex CLI, and Cursor. Currently open to software
+              engineering and Data/AI roles in Toronto and remote.
             </p>
           </motion.div>
         </div>
-
         <motion.div {...fadeUp(0.4)} className="card mt-5 p-8">
           <p className="section-tag mb-6">tech stack</p>
           <div className="flex flex-wrap gap-3">
@@ -84,12 +79,7 @@ export default function About() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.3, delay: i * 0.04 }}
                 whileHover={{ scale: 1.05 }}
-                className="cursor-default rounded-full px-4 py-2 text-xs font-medium"
-                style={{
-                  border: "1px solid rgba(168, 85, 247, 0.25)",
-                  background: "rgba(168, 85, 247, 0.08)",
-                  color: "#a855f7",
-                }}
+                className="tag cursor-default"
               >
                 {skill}
               </motion.span>
