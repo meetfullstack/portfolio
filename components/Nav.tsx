@@ -1,13 +1,14 @@
 "use client";
 
+import { useRef } from "react";
+import { useGSAP } from "@gsap/react";
+import gsap from "gsap";
 import Link from "next/link";
-import { motion } from "framer-motion";
-import { useState } from "react";
 
 const links = [
-  { href: "#about", label: "about" },
-  { href: "#projects", label: "projects" },
-  { href: "#contact", label: "contact" },
+  { href: "#about", label: "About" },
+  { href: "#projects", label: "Projects" },
+  { href: "#contact", label: "Contact" },
 ];
 
 const navGlass = {
@@ -34,42 +35,99 @@ const bubbleGlass = {
 };
 
 export default function Nav() {
-  const [hoveredLink, setHoveredLink] = useState<string | null>(null);
+  const headerRef = useRef<HTMLElement>(null);
+  const bubbleRef = useRef<HTMLDivElement>(null);
+  const navRef = useRef<HTMLElement>(null);
+
+  useGSAP(
+    () => {
+      gsap.from(headerRef.current, {
+        opacity: 0,
+        y: -24,
+        duration: 0.6,
+        ease: "power3.out",
+      });
+    },
+    { scope: headerRef }
+  );
+
+  // Move the single shared bubble to whichever link is hovered — avoids mounting/unmounting
+  function handleMouseEnter(e: React.MouseEvent<HTMLAnchorElement>) {
+    const nav = navRef.current;
+    const bubble = bubbleRef.current;
+    if (!nav || !bubble) return;
+
+    const navRect = nav.getBoundingClientRect();
+    const linkRect = e.currentTarget.getBoundingClientRect();
+
+    gsap.to(bubble, {
+      opacity: 1,
+      x: linkRect.left - navRect.left + 7,
+      width: linkRect.width - 14,
+      duration: 0.3,
+      ease: "power3.out",
+    });
+
+    // purple text on hovered link
+    gsap.to(e.currentTarget.querySelector("span"), {
+      color: "#a855f7",
+      duration: 0.2,
+    });
+  }
+
+  function handleMouseLeave(e: React.MouseEvent<HTMLAnchorElement>) {
+    gsap.to(e.currentTarget.querySelector("span"), {
+      color: "var(--text-muted)",
+      duration: 0.2,
+    });
+  }
+
+  function handleNavLeave() {
+    gsap.to(bubbleRef.current, { opacity: 0, duration: 0.2 });
+  }
 
   return (
-    <motion.header
-      initial={{ opacity: 0, y: -24 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
+    <header
+      ref={headerRef}
       className="sticky top-0 z-50"
-      style={{
-        ...navGlass,
-      }}
+      style={navGlass}
     >
       <div className="container flex items-center justify-between py-7">
-        <motion.div
-          whileHover={{ scale: 1.04 }}
-          transition={{ type: "spring", stiffness: 400, damping: 25 }}
+        <Link
+          href="/"
+          className="font-mono text-base font-bold accent-text"
+          style={{ letterSpacing: "0.06em" }}
         >
-          <Link
-            href="/"
-            className="font-mono text-base font-bold accent-text"
-            style={{ letterSpacing: "0.06em" }}
-          >
-            meet.dev
-          </Link>
-        </motion.div>
+          Meet.dev
+        </Link>
 
         <nav
-          className="flex items-center gap-1"
-          onMouseLeave={() => setHoveredLink(null)}
+          ref={navRef}
+          className="relative flex items-center gap-1"
+          onMouseLeave={handleNavLeave}
         >
+          {/* shared sliding bubble */}
+          <div
+            ref={bubbleRef}
+            style={{
+              position: "absolute",
+              top: 5,
+              bottom: 5,
+              left: 0,
+              width: 0,
+              borderRadius: 999,
+              opacity: 0,
+              pointerEvents: "none",
+              ...bubbleGlass,
+            }}
+          />
+
           {links.map((link) => (
-            /* Added missing '<a' */
             <a
               key={link.href}
               href={link.href}
-              onMouseEnter={() => setHoveredLink(link.href)}
+              onMouseEnter={handleMouseEnter}
+              onMouseLeave={handleMouseLeave}
               style={{
                 position: "relative",
                 padding: "10px 22px",
@@ -77,32 +135,13 @@ export default function Nav() {
                 textDecoration: "none",
               }}
             >
-              {hoveredLink === link.href && (
-                <motion.div
-                  layoutId="navBubble"
-                  style={{
-                    position: "absolute",
-                    inset: "5px 7px",
-                    borderRadius: 999,
-                    ...bubbleGlass,
-                  }}
-                  transition={{
-                    type: "spring",
-                    stiffness: 380,
-                    damping: 28,
-                    mass: 0.8,
-                  }}
-                />
-              )}
               <span
                 style={{
                   position: "relative",
                   zIndex: 1,
                   fontFamily: "var(--font-mono)",
                   fontSize: "0.78rem",
-                  color:
-                    hoveredLink === link.href ? "#a855f7" : "var(--text-muted)",
-                  transition: "color 0.25s ease",
+                  color: "var(--text-muted)",
                   letterSpacing: "0.04em",
                 }}
               >
@@ -112,6 +151,6 @@ export default function Nav() {
           ))}
         </nav>
       </div>
-    </motion.header>
+    </header>
   );
 }

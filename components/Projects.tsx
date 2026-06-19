@@ -1,6 +1,11 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useRef } from "react";
+import { useGSAP } from "@gsap/react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 
 type Project = {
   title: string;
@@ -37,42 +42,36 @@ const projects: Project[] = [
   },
 ];
 
-const fadeUp = (delay: number) => ({
-  initial: { opacity: 0, y: 30 },
-  whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true },
-  transition: { duration: 0.6, delay },
-});
-
 function ProjectCard({ project, index }: { project: Project; index: number }) {
   const num = String(index + 1).padStart(2, "0");
+
+  function handleEnter(e: React.MouseEvent<HTMLDivElement>) {
+    gsap.to(e.currentTarget, { y: -6, duration: 0.3, ease: "power2.out" });
+  }
+
+  function handleLeave(e: React.MouseEvent<HTMLDivElement>) {
+    gsap.to(e.currentTarget, { y: 0, duration: 0.3, ease: "power2.out" });
+  }
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.5, delay: index * 0.1 }}
-      whileHover={{ y: -4 }}
-      className="card flex flex-col p-8"
+    <div
+      onMouseEnter={handleEnter}
+      onMouseLeave={handleLeave}
+      className="project-card card flex flex-col p-8"
+      style={{ willChange: "transform" }}
     >
       <p className="section-tag mb-3">project.{num}</p>
       <h3 className="text-xl font-semibold">{project.title}</h3>
-      <p
-        className="mt-3 flex-1 text-sm leading-relaxed"
-        style={{ color: "var(--text-secondary)" }}
-      >
+      <p className="mt-3 flex-1 text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
         {project.description}
       </p>
       <div className="mt-6 flex flex-wrap gap-2">
         {project.tech.map((t) => (
-          <span key={t} className="tag">
-            {t}
-          </span>
+          <span key={t} className="tag">{t}</span>
         ))}
       </div>
       <div className="mt-6 flex gap-4 text-sm font-medium">
-        {project.github !== "" ? (
-          /* Added missing '<a' */
+        {project.github !== "" && (
           <a
             href={project.github}
             target="_blank"
@@ -81,9 +80,8 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
           >
             GitHub →
           </a>
-        ) : null}
-        {project.live !== "" ? (
-          /* Added missing '<a' */
+        )}
+        {project.live !== "" && (
           <a
             href={project.live}
             target="_blank"
@@ -92,15 +90,41 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
           >
             Live →
           </a>
-        ) : null}
+        )}
       </div>
-    </motion.div>
+    </div>
   );
 }
 
 export default function Projects() {
+  const sectionRef = useRef<HTMLElement>(null);
+
+  useGSAP(
+    () => {
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: "top 80%",
+          once: true,
+        },
+      });
+
+      tl.from(".projects-tag", { opacity: 0, y: 20, duration: 0.5, ease: "power3.out" })
+        .from(".projects-heading", { opacity: 0, y: 30, duration: 0.6, ease: "power3.out" }, "-=0.3")
+        .from(".project-card", {
+          opacity: 0,
+          y: 50,
+          duration: 0.7,
+          stagger: 0.15,
+          ease: "power3.out",
+        }, "-=0.2");
+    },
+    { scope: sectionRef }
+  );
+
   return (
     <section
+      ref={sectionRef}
       id="projects"
       style={{
         paddingTop: "var(--section-gap)",
@@ -108,16 +132,22 @@ export default function Projects() {
       }}
     >
       <div className="container">
-        <motion.p {...fadeUp(0)} className="section-tag mb-3">
-          02 // projects.work
-        </motion.p>
-        <motion.h2
-          {...fadeUp(0.1)}
-          className="text-4xl font-bold tracking-tight sm:text-5xl"
-        >
-          Things I have built
-        </motion.h2>
-        <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="relative flex items-start justify-between">
+          <div>
+            <p className="projects-tag section-tag mb-3">02 // projects.work</p>
+            <h2 className="projects-heading text-4xl font-bold tracking-tight sm:text-5xl">
+              Things I have built
+            </h2>
+          </div>
+          <span
+            aria-hidden="true"
+            className="projects-tag select-none font-bold leading-none"
+            style={{ fontSize: "clamp(5rem,12vw,9rem)", color: "var(--border)", opacity: 0.6 }}
+          >
+            02
+          </span>
+        </div>
+        <div className="mt-12" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1.25rem" }}>
           {projects.map((project, i) => (
             <ProjectCard key={project.title} project={project} index={i} />
           ))}

@@ -15,7 +15,7 @@ export default function Footer() {
             meet.dev
           </Link>
           <p className="mt-2 text-xs" style={{ color: "var(--text-muted)" }}>
-            Built with Next.js 16, Tailwind CSS, and Framer Motion.
+            Built with Next.js 16, Tailwind CSS, and GSAP.
           </p>
           <p className="mt-1 text-xs" style={{ color: "var(--text-muted)" }}>
             © {new Date().getFullYear()} Meet Upadhyay
