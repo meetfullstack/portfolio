@@ -11,15 +11,11 @@ const links = [
   { href: "#contact", label: "Contact" },
 ];
 
-const navGlass = {
-  background: "rgba(180,180,180,0.12)",
-  backdropFilter: "blur(20px)",
-  WebkitBackdropFilter: "blur(20px)",
-  boxShadow: [
-    "inset -0.3px -1px 4px 0px rgba(0,0,0,0.1)",
-    "0px 4px 12px 0px rgba(0,0,0,0.1)",
-    "0px 8px 32px 0px rgba(0,0,0,0.1)",
-  ].join(", "),
+const navStyle = {
+  background: "color-mix(in srgb, var(--bg-primary) 95%, transparent)",
+  backdropFilter: "blur(16px)",
+  WebkitBackdropFilter: "blur(16px)",
+  borderBottom: "1px solid var(--border)",
 };
 
 const bubbleGlass = {
@@ -89,14 +85,14 @@ export default function Nav() {
   return (
     <header
       ref={headerRef}
-      className="sticky top-0 z-50"
-      style={navGlass}
+      className="fixed top-0 left-0 right-0 z-50"
+      style={navStyle}
     >
-      <div className="container flex items-center justify-between py-7">
+      <div className="flex w-full items-center justify-between px-6 py-5 lg:px-12">
         <Link
           href="/"
-          className="font-mono text-base font-bold accent-text"
-          style={{ letterSpacing: "0.06em" }}
+          className="font-mono font-medium accent-text"
+          style={{ fontSize: "13px", letterSpacing: "0.04em" }}
         >
           Meet.dev
         </Link>

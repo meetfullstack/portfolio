@@ -44,9 +44,12 @@
 
 html {
   scroll-behavior: smooth;
+  /* offset anchor scrolls so the fixed nav doesn't cover section headings */
+  scroll-padding-top: 72px;
 }
 
 body {
+  padding-top: 56px; /* height of the fixed nav */
   background-color: var(--bg-primary);
   color: var(--text-primary);
   font-family: var(--font-sans);
@@ -183,5 +186,197 @@ body {
 
 .container {
   width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
   padding: 0 1.5rem;
+}
+
+/* ---- CTA buttons — codedgar exact pattern, purple theme ---- */
+.btn-primary,
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  padding: 12px 24px;
+  border: 1px solid transparent;
+  text-decoration: none;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+/* Primary: purple gradient → white fill slides right→left on hover, text turns purple */
+.btn-primary {
+  background: var(--accent-gradient);
+  color: #fff;
+}
+
+.btn-primary::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.3s ease;
+  z-index: -1;
+}
+
+.btn-primary:hover {
+  color: var(--accent-mid);
+  box-shadow: 0 4px 20px rgba(168, 85, 247, 0.3);
+}
+
+.btn-primary:hover::before {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+/* Secondary: border outline → subtle purple fill slides in from left on hover */
+.btn-secondary {
+  background: transparent;
+  color: var(--text-primary);
+  border-color: var(--border);
+}
+
+.btn-secondary::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  background: linear-gradient(
+    90deg,
+    rgba(168, 85, 247, 0.15) 0%,
+    rgba(168, 85, 247, 0.15) 50%,
+    transparent 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  background-position: 100% 0;
+  transition: background-position 0.4s ease;
+  z-index: -1;
+  opacity: 0;
+}
+
+.btn-secondary:hover {
+  border-color: rgba(168, 85, 247, 0.6);
+}
+
+.btn-secondary:hover::before {
+  background-position: 0% 0;
+  opacity: 1;
+}
+
+/* ---- Lenis smooth scroll ---- */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis:not(.lenis-autoToggle).lenis-stopped {
+  overflow: clip;
+}
+
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}
+
+/* ---- Custom cursor ---- */
+.cursor-dot,
+.cursor-ring {
+  position: fixed;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 9998;
+  border-radius: 999px;
+  opacity: 0;
+  will-change: transform;
+}
+
+.cursor-dot {
+  width: 7px;
+  height: 7px;
+  background: var(--accent-mid);
+}
+
+.cursor-ring {
+  width: 34px;
+  height: 34px;
+  border: 1.5px solid rgba(168, 85, 247, 0.5);
+  background-color: rgba(168, 85, 247, 0);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+/* Hide the native cursor only once the custom one is live (fine pointers only) */
+body.cursor-active,
+body.cursor-active a,
+body.cursor-active button,
+body.cursor-active label,
+body.cursor-active .card,
+body.cursor-active .tag {
+  cursor: none;
+}
+
+@media (pointer: coarse) {
+  .cursor-dot,
+  .cursor-ring {
+    display: none;
+  }
+}
+
+/* ---- Oversized outlined section numbers (codedgar-style) ---- */
+.section-number {
+  font-family: var(--font-sans);
+  font-weight: 800;
+  line-height: 0.78;
+  font-size: clamp(6rem, 14vw, 11rem);
+  letter-spacing: -0.04em;
+  color: transparent;
+  -webkit-text-stroke: 1.5px rgba(168, 85, 247, 0.28);
+  user-select: none;
+  pointer-events: none;
+}
+
+.dark .section-number {
+  -webkit-text-stroke-color: rgba(168, 85, 247, 0.35);
+}
+
+/* ---- Hero photo frame (placeholder until a real photo is dropped in) ---- */
+.hero-photo-frame {
+  position: relative;
+  width: 338px;
+  max-height: 450px;
+  aspect-ratio: 3 / 4;
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-card);
+}
+
+.hero-photo-glow {
+  position: absolute;
+  inset: -25%;
+  background: radial-gradient(
+    circle at 50% 38%,
+    rgba(168, 85, 247, 0.4),
+    transparent 60%
+  );
+}
+
+.hero-photo-monogram {
+  position: relative;
+  font-size: clamp(7rem, 16vw, 12rem);
+  font-weight: 800;
+  line-height: 1;
 }

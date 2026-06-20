@@ -38,6 +38,17 @@ export default function Contact() {
         .from(".contact-heading", { opacity: 0, y: 30, duration: 0.6, ease: "power3.out" }, "-=0.3")
         .from(".contact-subtext", { opacity: 0, y: 20, duration: 0.5, ease: "power3.out" }, "-=0.3")
         .from(".contact-form", { opacity: 0, y: 40, duration: 0.7, ease: "power3.out" }, "-=0.2");
+
+      gsap.to(".section-number", {
+        yPercent: -28,
+        ease: "none",
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: "top bottom",
+          end: "bottom top",
+          scrub: true,
+        },
+      });
     },
     { scope: sectionRef }
   );
@@ -97,11 +108,7 @@ export default function Contact() {
               Get in touch
             </h2>
           </div>
-          <span
-            aria-hidden="true"
-            className="contact-tag select-none font-bold leading-none"
-            style={{ fontSize: "clamp(5rem,12vw,9rem)", color: "var(--border)", opacity: 0.6 }}
-          >
+          <span aria-hidden="true" className="contact-tag section-number">
             03
           </span>
         </div>

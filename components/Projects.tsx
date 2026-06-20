@@ -118,6 +118,17 @@ export default function Projects() {
           stagger: 0.15,
           ease: "power3.out",
         }, "-=0.2");
+
+      gsap.to(".section-number", {
+        yPercent: -28,
+        ease: "none",
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: "top bottom",
+          end: "bottom top",
+          scrub: true,
+        },
+      });
     },
     { scope: sectionRef }
   );
@@ -139,11 +150,7 @@ export default function Projects() {
               Things I have built
             </h2>
           </div>
-          <span
-            aria-hidden="true"
-            className="projects-tag select-none font-bold leading-none"
-            style={{ fontSize: "clamp(5rem,12vw,9rem)", color: "var(--border)", opacity: 0.6 }}
-          >
+          <span aria-hidden="true" className="projects-tag section-number">
             02
           </span>
         </div>

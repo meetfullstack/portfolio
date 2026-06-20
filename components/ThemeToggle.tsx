@@ -1,13 +1,21 @@
 "use client";
 
 import { useTheme } from "next-themes";
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef, useSyncExternalStore } from "react";
 import gsap from "gsap";
 
 type ThemeOption = "light" | "dark" | "system";
 
 const SunIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+  <svg
+    width="18"
+    height="18"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+  >
     <circle cx="12" cy="12" r="5" />
     <line x1="12" y1="1" x2="12" y2="3" />
     <line x1="12" y1="21" x2="12" y2="23" />
@@ -21,13 +29,29 @@ const SunIcon = () => (
 );
 
 const MoonIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+  <svg
+    width="18"
+    height="18"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+  >
     <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
   </svg>
 );
 
 const SystemIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+  <svg
+    width="18"
+    height="18"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+  >
     <rect x="2" y="3" width="20" height="14" rx="2" />
     <line x1="8" y1="21" x2="16" y2="21" />
     <line x1="12" y1="17" x2="12" y2="21" />
@@ -62,16 +86,21 @@ const glassBox = {
 
 export default function ThemeToggle() {
   const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
   const [hoveredOption, setHoveredOption] = useState<ThemeOption | null>(null);
+
+  // false during SSR + initial hydration render, true once on the client —
+  // avoids a hydration mismatch without setState-in-effect.
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
 
   const containerRef = useRef<HTMLDivElement>(null);
   const collapsedRef = useRef<HTMLDivElement>(null);
   const expandedRef = useRef<HTMLDivElement>(null);
   const indicatorRef = useRef<HTMLDivElement>(null);
   const btnRefs = useRef<(HTMLButtonElement | null)[]>([]);
-
-  useEffect(() => { setMounted(true); }, []);
 
   function handleMouseEnter() {
     gsap.to(containerRef.current, {
@@ -89,7 +118,12 @@ export default function ThemeToggle() {
       duration: 0.4,
       ease: "power4.inOut",
     });
-    gsap.to(collapsedRef.current, { opacity: 1, scale: 1, duration: 0.2, delay: 0.1 });
+    gsap.to(collapsedRef.current, {
+      opacity: 1,
+      scale: 1,
+      duration: 0.2,
+      delay: 0.1,
+    });
     gsap.to(expandedRef.current, { opacity: 0, duration: 0.2 });
     gsap.to(indicatorRef.current, { opacity: 0, duration: 0.15 });
     setHoveredOption(null);
@@ -134,7 +168,11 @@ export default function ThemeToggle() {
   }
 
   function handleBtnUp(idx: number) {
-    gsap.to(btnRefs.current[idx], { scale: 1, duration: 0.15, ease: "back.out(2)" });
+    gsap.to(btnRefs.current[idx], {
+      scale: 1,
+      duration: 0.15,
+      ease: "back.out(2)",
+    });
   }
 
   if (!mounted) return null;
@@ -207,7 +245,9 @@ export default function ThemeToggle() {
           {options.map((opt, idx) => (
             <button
               key={opt.value}
-              ref={(el) => { btnRefs.current[idx] = el; }}
+              ref={(el) => {
+                btnRefs.current[idx] = el;
+              }}
               onClick={() => setTheme(opt.value)}
               onMouseEnter={() => handleBtnEnter(opt.value, idx)}
               onMouseLeave={() => handleBtnLeave(idx)}
@@ -224,7 +264,10 @@ export default function ThemeToggle() {
                 alignItems: "center",
                 justifyContent: "center",
                 background: "transparent",
-                color: displayActive === opt.value ? "#a855f7" : "var(--text-secondary)",
+                color:
+                  displayActive === opt.value
+                    ? "#a855f7"
+                    : "var(--text-secondary)",
                 position: "relative",
                 zIndex: 1,
               }}
