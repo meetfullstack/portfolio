@@ -12,7 +12,7 @@ export default function Footer() {
       <div className="container flex flex-col items-start justify-between gap-8 sm:flex-row sm:items-center">
         <div>
           <Link href="/" className="font-mono text-sm font-bold accent-text">
-            meet.dev
+            Meet.dev
           </Link>
           <p className="mt-2 text-xs" style={{ color: "var(--text-muted)" }}>
             Built with Next.js 16, Tailwind CSS, and GSAP.
