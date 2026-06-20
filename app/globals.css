@@ -288,51 +288,6 @@ html.lenis body {
   pointer-events: none;
 }
 
-/* ---- Custom cursor ---- */
-.cursor-dot,
-.cursor-ring {
-  position: fixed;
-  top: 0;
-  left: 0;
-  pointer-events: none;
-  z-index: 9998;
-  border-radius: 999px;
-  opacity: 0;
-  will-change: transform;
-}
-
-.cursor-dot {
-  width: 7px;
-  height: 7px;
-  background: var(--accent-mid);
-}
-
-.cursor-ring {
-  width: 34px;
-  height: 34px;
-  border: 1.5px solid rgba(168, 85, 247, 0.5);
-  background-color: rgba(168, 85, 247, 0);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
-}
-
-/* Hide the native cursor only once the custom one is live (fine pointers only) */
-body.cursor-active,
-body.cursor-active a,
-body.cursor-active button,
-body.cursor-active label,
-body.cursor-active .card,
-body.cursor-active .tag {
-  cursor: none;
-}
-
-@media (pointer: coarse) {
-  .cursor-dot,
-  .cursor-ring {
-    display: none;
-  }
-}
-
 /* ---- Oversized outlined section numbers (codedgar-style) ---- */
 .section-number {
   font-family: var(--font-sans);
