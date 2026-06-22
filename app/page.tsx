@@ -7,6 +7,8 @@ import About from "@/components/About";
 import Projects from "@/components/Projects";
 import Contact from "@/components/Contact";
 import SectionDivider from "@/components/SectionDivider";
+import CornerButton from "@/components/CornerButton";
+import Image from "next/image";
 
 export default function Home() {
   const heroRef = useRef<HTMLElement>(null);
@@ -14,14 +16,21 @@ export default function Home() {
   useGSAP(
     () => {
       gsap.from(
-        [".hero-tag", ".hero-heading", ".hero-line", ".hero-sub", ".hero-cta", ".hero-stats"],
+        [
+          ".hero-tag",
+          ".hero-heading",
+          ".hero-line",
+          ".hero-sub",
+          ".hero-cta",
+          ".hero-stats",
+        ],
         {
           opacity: 0,
           y: 30,
           duration: 0.7,
           stagger: 0.12,
           ease: "power3.out",
-        }
+        },
       );
 
       gsap.from(".hero-image", {
@@ -33,7 +42,7 @@ export default function Home() {
         delay: 0.2,
       });
     },
-    { scope: heroRef }
+    { scope: heroRef },
   );
 
   return (
@@ -43,11 +52,18 @@ export default function Home() {
         className="container grid min-h-[92vh] items-center gap-12 lg:grid-cols-[1.1fr_0.9fr]"
       >
         <div className="flex flex-col">
-          <p className="hero-tag section-tag mb-8">{"// hello.world"} — available for work</p>
+          <p className="hero-tag section-tag mb-8">
+            {"// hello.world"} — available for work
+          </p>
 
-          <h1 className="hero-heading font-bold tracking-tight" style={{ fontSize: "clamp(2.5rem, 4vw, 3.5rem)", lineHeight: 1.2 }}>
+          <h1
+            className="hero-heading font-bold tracking-tight"
+            style={{ fontSize: "clamp(2.5rem, 4vw, 3.5rem)", lineHeight: 1.2 }}
+          >
             <span style={{ display: "block" }}>Hello, I&apos;m Meet —</span>
-            <span className="accent-text" style={{ display: "block" }}>Full-Stack Developer.</span>
+            <span className="accent-text" style={{ display: "block" }}>
+              Full-Stack Developer.
+            </span>
           </h1>
 
           <div
@@ -64,59 +80,59 @@ export default function Home() {
             in Toronto and remote.
           </p>
 
-          <div className="hero-cta mt-10 flex flex-wrap gap-4">
-            <a
-              href="#projects"
-              className="accent-gradient rounded-full px-7 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
-            >
+          <div className="hero-cta mt-10 flex flex-wrap gap-8">
+            <CornerButton href="#projects" variant="primary">
               View my work
-            </a>
-            <a
-              href="#contact"
-              className="rounded-full px-7 py-3 text-sm font-semibold transition-all"
-              style={{ border: "1px solid var(--border)", color: "var(--text-primary)" }}
-            >
+            </CornerButton>
+            <CornerButton href="#contact" variant="secondary">
               Get in touch
-            </a>
+            </CornerButton>
           </div>
 
           <div
-            className="hero-stats mt-20 flex gap-12"
-            style={{ borderTop: "1px solid var(--border)", paddingTop: "2rem" }}
+            className="hero-stats flex gap-12"
+            style={{ marginTop: "3.5rem" }}
           >
             <div>
               <p className="accent-text text-3xl font-bold">2+</p>
-              <p className="mt-1 text-sm" style={{ color: "var(--text-muted)" }}>
+              <p
+                className="mt-1 text-sm"
+                style={{ color: "var(--text-muted)" }}
+              >
                 years experience
               </p>
             </div>
             <div>
               <p className="accent-text text-3xl font-bold">3+</p>
-              <p className="mt-1 text-sm" style={{ color: "var(--text-muted)" }}>
+              <p
+                className="mt-1 text-sm"
+                style={{ color: "var(--text-muted)" }}
+              >
                 projects shipped
               </p>
             </div>
             <div>
               <p className="accent-text text-3xl font-bold">5+</p>
-              <p className="mt-1 text-sm" style={{ color: "var(--text-muted)" }}>
+              <p
+                className="mt-1 text-sm"
+                style={{ color: "var(--text-muted)" }}
+              >
                 technologies
               </p>
             </div>
           </div>
         </div>
 
-        {/*
-          Hero photo column. To use your real photo:
-            1. Drop the image in /public (e.g. /public/profile.jpg)
-            2. Add at the top of this file:  import Image from "next/image";
-            3. Replace the .hero-photo-glow + monogram below with:
-               <Image src="/profile.jpg" alt="Meet Upadhyay" fill priority
-                      className="object-cover" sizes="(max-width:1024px) 0px, 420px" />
-        */}
         <div className="hero-image hidden lg:flex lg:justify-end">
           <div className="hero-photo-frame">
-            <div className="hero-photo-glow" />
-            <span className="hero-photo-monogram accent-text">M</span>
+            <Image
+              src="/profile.jpg"
+              alt="Meet Upadhyay"
+              fill
+              priority
+              className="object-cover"
+              sizes="(max-width:1024px) 0px, 338px"
+            />
           </div>
         </div>
       </section>

@@ -191,15 +191,13 @@ body {
   padding: 0 1.5rem;
 }
 
-/* ---- CTA buttons — codedgar exact pattern, purple theme ---- */
-.btn-primary,
-.btn-secondary {
+/* ---- CTA buttons — copied 1:1 from codedgar's .btn, mapped to purple theme ---- */
+.btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   font-family: var(--font-mono);
-  font-size: 14px;
-  letter-spacing: 0.02em;
+  font-size: 0.875rem;
   padding: 12px 24px;
   border: 1px solid transparent;
   text-decoration: none;
@@ -213,13 +211,14 @@ body {
     box-shadow 0.2s ease;
 }
 
-/* Primary: purple gradient → white fill slides right→left on hover, text turns purple */
-.btn-primary {
-  background: var(--accent-gradient);
+/* Primary: solid accent → cream fill wipes left, text turns accent */
+.btn--primary {
+  background: var(--accent-mid);
   color: #fff;
+  border-color: var(--accent-mid);
 }
 
-.btn-primary::before {
+.btn--primary::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -230,31 +229,31 @@ body {
   z-index: -1;
 }
 
-.btn-primary:hover {
+.btn--primary:hover {
   color: var(--accent-mid);
   box-shadow: 0 4px 20px rgba(168, 85, 247, 0.3);
 }
 
-.btn-primary:hover::before {
+.btn--primary:hover::before {
   transform: scaleX(1);
   transform-origin: left;
 }
 
-/* Secondary: border outline → subtle purple fill slides in from left on hover */
-.btn-secondary {
+/* Secondary: outline → faint accent fill slides in from left */
+.btn--secondary {
   background: transparent;
   color: var(--text-primary);
-  border-color: var(--border);
+  border-color: var(--text-muted);
 }
 
-.btn-secondary::before {
+.btn--secondary::before {
   content: "";
   position: absolute;
   inset: -1px;
   background: linear-gradient(
     90deg,
-    rgba(168, 85, 247, 0.15) 0%,
-    rgba(168, 85, 247, 0.15) 50%,
+    var(--accent-mid) 0%,
+    var(--accent-mid) 50%,
     transparent 50%,
     transparent 100%
   );
@@ -265,13 +264,75 @@ body {
   opacity: 0;
 }
 
-.btn-secondary:hover {
-  border-color: rgba(168, 85, 247, 0.6);
+.btn--secondary:hover {
+  border-color: var(--accent-mid);
+  color: var(--text-primary);
 }
 
-.btn-secondary:hover::before {
-  background-position: 0% 0;
+.btn--secondary:hover::before {
+  background-position: 0 0;
+  opacity: 0.1;
+}
+
+/* ---- 4-corner bracket frame — copied from codedgar's cursor-target corners ---- */
+.btn-frame {
+  position: relative;
+  display: inline-flex;
+}
+
+.btn-corner {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-color: var(--accent-mid);
+  border-style: solid;
+  border-width: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
+}
+
+.btn-corner--tl {
+  top: -4px;
+  left: -4px;
+  border-top-width: 2px;
+  border-left-width: 2px;
+  transform: translate(-3px, -3px);
+}
+
+.btn-corner--tr {
+  top: -4px;
+  right: -4px;
+  border-top-width: 2px;
+  border-right-width: 2px;
+  transform: translate(3px, -3px);
+}
+
+.btn-corner--bl {
+  bottom: -4px;
+  left: -4px;
+  border-bottom-width: 2px;
+  border-left-width: 2px;
+  transform: translate(-3px, 3px);
+}
+
+.btn-corner--br {
+  bottom: -4px;
+  right: -4px;
+  border-bottom-width: 2px;
+  border-right-width: 2px;
+  transform: translate(3px, 3px);
+}
+
+/* On hover the corners snap inward to translate(0) and fade in (codedgar's .is-active) */
+.btn-frame:hover .btn-corner {
   opacity: 1;
+  transform: translate(0, 0);
+  transition:
+    opacity 0.2s ease 0.1s,
+    transform 0.2s ease 0.1s;
 }
 
 /* ---- Lenis smooth scroll ---- */
@@ -311,12 +372,31 @@ html.lenis body {
   width: 338px;
   max-height: 450px;
   aspect-ratio: 3 / 4;
-  border-radius: 4px;
+  border-radius: 0 !important;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--bg-card);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.14),
+    inset 2px 3px 0px -2px rgba(255, 255, 255, 0.65),
+    inset -2px -2px 0px -2px rgba(255, 255, 255, 0.45),
+    inset -0.3px -1px 4px 0px rgba(0, 0, 0, 0.06),
+    0px 8px 32px 0px rgba(0, 0, 0, 0.08),
+    0px 16px 48px 0px rgba(168, 85, 247, 0.1);
+}
+
+.dark .hero-photo-frame {
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+    inset 2px 3px 0px -2px rgba(255, 255, 255, 0.12),
+    0px 8px 32px 0px rgba(0, 0, 0, 0.3),
+    0px 16px 48px 0px rgba(168, 85, 247, 0.12);
+}
+
+.hero-photo-frame img {
+  border-radius: 0 !important;
 }
 
 .hero-photo-glow {

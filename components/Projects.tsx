@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import CornerButton from "@/components/CornerButton";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -70,26 +71,16 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
           <span key={t} className="tag">{t}</span>
         ))}
       </div>
-      <div className="mt-6 flex gap-4 text-sm font-medium">
+      <div className="mt-6 flex flex-wrap gap-5">
         {project.github !== "" && (
-          <a
-            href={project.github}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="accent-text transition-opacity hover:opacity-70"
-          >
+          <CornerButton href={project.github} variant="secondary" external>
             GitHub →
-          </a>
+          </CornerButton>
         )}
         {project.live !== "" && (
-          <a
-            href={project.live}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="accent-text transition-opacity hover:opacity-70"
-          >
+          <CornerButton href={project.live} variant="primary" external>
             Live →
-          </a>
+          </CornerButton>
         )}
       </div>
     </div>
@@ -154,7 +145,7 @@ export default function Projects() {
             02
           </span>
         </div>
-        <div className="mt-12" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1.25rem" }}>
+        <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {projects.map((project, i) => (
             <ProjectCard key={project.title} project={project} index={i} />
           ))}

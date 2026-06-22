@@ -96,7 +96,7 @@ export default function About() {
             01
           </span>
         </div>
-        <div className="mt-12" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "1.25rem" }}>
+        <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="about-card card p-8">
             <p className="section-tag mb-4">background</p>
             <p className="text-base leading-relaxed" style={{ color: "var(--text-secondary)" }}>

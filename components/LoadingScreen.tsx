@@ -13,7 +13,10 @@ export default function LoadingScreen() {
   useEffect(() => {
     if (sessionStorage.getItem("loaded")) return;
     sessionStorage.setItem("loaded", "1");
-    setShow(true);
+    const handle = requestAnimationFrame(() => {
+      setShow(true);
+    });
+    return () => cancelAnimationFrame(handle);
   }, []);
 
   useEffect(() => {

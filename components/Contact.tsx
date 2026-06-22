@@ -144,7 +144,7 @@ export default function Contact() {
 
             <div className="flex flex-col gap-2">
               <label htmlFor="message" className="section-tag">message</label>
-              <textarea id="message" name="message" rows={5} required className={inputClass} style={inputStyle} />
+              <textarea id="message" name="message" rows={5} required minLength={10} className={inputClass} style={inputStyle} />
             </div>
 
             <button
