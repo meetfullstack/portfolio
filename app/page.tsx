@@ -22,7 +22,6 @@ export default function Home() {
           ".hero-line",
           ".hero-sub",
           ".hero-cta",
-          ".hero-stats",
         ],
         {
           opacity: 0,
@@ -89,38 +88,7 @@ export default function Home() {
             </CornerButton>
           </div>
 
-          <div
-            className="hero-stats flex gap-12"
-            style={{ marginTop: "3.5rem" }}
-          >
-            <div>
-              <p className="accent-text text-3xl font-bold">2+</p>
-              <p
-                className="mt-1 text-sm"
-                style={{ color: "var(--text-muted)" }}
-              >
-                years experience
-              </p>
-            </div>
-            <div>
-              <p className="accent-text text-3xl font-bold">3+</p>
-              <p
-                className="mt-1 text-sm"
-                style={{ color: "var(--text-muted)" }}
-              >
-                projects shipped
-              </p>
-            </div>
-            <div>
-              <p className="accent-text text-3xl font-bold">5+</p>
-              <p
-                className="mt-1 text-sm"
-                style={{ color: "var(--text-muted)" }}
-              >
-                technologies
-              </p>
-            </div>
-          </div>
+
         </div>
 
         <div className="hero-image hidden lg:flex lg:justify-end">
