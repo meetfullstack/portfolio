@@ -1,15 +1,19 @@
 "use client";
 
 import { useTheme } from "next-themes";
-import { useState, useRef, useSyncExternalStore } from "react";
+import {
+  useState,
+  useRef,
+  useSyncExternalStore,
+  useEffect,
+  useLayoutEffect,
+} from "react";
 import gsap from "gsap";
-
-type ThemeOption = "light" | "dark" | "system";
 
 const SunIcon = () => (
   <svg
-    width="18"
-    height="18"
+    width="16"
+    height="16"
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
@@ -30,8 +34,8 @@ const SunIcon = () => (
 
 const MoonIcon = () => (
   <svg
-    width="18"
-    height="18"
+    width="16"
+    height="16"
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
@@ -42,35 +46,23 @@ const MoonIcon = () => (
   </svg>
 );
 
-const SystemIcon = () => (
+const ArrowUpIcon = () => (
   <svg
-    width="18"
-    height="18"
+    width="16"
+    height="16"
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    strokeWidth="2"
+    strokeWidth="2.5"
     strokeLinecap="round"
+    strokeLinejoin="round"
   >
-    <rect x="2" y="3" width="20" height="14" rx="2" />
-    <line x1="8" y1="21" x2="16" y2="21" />
-    <line x1="12" y1="17" x2="12" y2="21" />
+    <line x1="12" y1="19" x2="12" y2="5" />
+    <polyline points="5 12 12 5 19 12" />
   </svg>
 );
 
-const options: { value: ThemeOption; icon: React.ReactNode }[] = [
-  { value: "light", icon: <SunIcon /> },
-  { value: "dark", icon: <MoonIcon /> },
-  { value: "system", icon: <SystemIcon /> },
-];
-
-function getCurrentIcon(theme: string | undefined) {
-  if (theme === "dark") return <MoonIcon />;
-  if (theme === "system") return <SystemIcon />;
-  return <SunIcon />;
-}
-
-const glassBox = {
+const glass = {
   background: "rgba(180,180,180,0.12)",
   backdropFilter: "blur(20px)",
   WebkitBackdropFilter: "blur(20px)",
@@ -78,204 +70,188 @@ const glassBox = {
     "inset 0 0 0 1px rgba(255,255,255,0.15)",
     "inset 2px 3px 0px -2px rgba(255,255,255,0.7)",
     "inset -2px -2px 0px -2px rgba(255,255,255,0.5)",
-    "inset -0.3px -1px 4px 0px rgba(0,0,0,0.1)",
     "0px 4px 12px 0px rgba(0,0,0,0.1)",
     "0px 8px 32px 0px rgba(0,0,0,0.1)",
   ].join(", "),
 };
 
-export default function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
-  const [hoveredOption, setHoveredOption] = useState<ThemeOption | null>(null);
+const BTN = 36;
+const PAD = 8;
+const GAP = 4;
+const H = 52;
 
-  // false during SSR + initial hydration render, true once on the client —
-  // avoids a hydration mismatch without setState-in-effect.
+// Icon slide logic (derived from isDark × hovered):
+//
+//   state              sun pos   moon pos   visible
+//   light + no-hover     0        -BTN       sun
+//   light + hover       +BTN       0         moon  ← preview dark
+//   dark  + no-hover   +BTN        0         moon
+//   dark  + hover        0        -BTN       sun   ← preview light
+//
+// sun  at 0 when isDark === hovered,  else +BTN
+// moon at 0 when isDark !== hovered,  else -BTN
+//
+// Directions: light→dark hover: sun exits RIGHT, moon enters from LEFT
+//             dark→light hover: moon exits LEFT,  sun enters from RIGHT
+
+export default function ThemeToggle() {
+  const { resolvedTheme, setTheme } = useTheme();
+  const [hovered, setHovered] = useState(false);
+  const [pillHovered, setPillHovered] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
   const mounted = useSyncExternalStore(
     () => () => {},
     () => true,
     () => false,
   );
 
-  const containerRef = useRef<HTMLDivElement>(null);
-  const collapsedRef = useRef<HTMLDivElement>(null);
-  const expandedRef = useRef<HTMLDivElement>(null);
-  const indicatorRef = useRef<HTMLDivElement>(null);
-  const btnRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const pillRef = useRef<HTMLDivElement>(null);
+  const sunRef = useRef<HTMLDivElement>(null);
+  const moonRef = useRef<HTMLDivElement>(null);
+  const isFirstAnim = useRef(true);
 
-  function handleMouseEnter() {
-    gsap.to(containerRef.current, {
-      width: 132,
-      duration: 0.4,
-      ease: "power4.inOut",
-    });
-    gsap.to(collapsedRef.current, { opacity: 0, scale: 0.6, duration: 0.2 });
-    gsap.to(expandedRef.current, { opacity: 1, duration: 0.25, delay: 0.1 });
-  }
+  const isDark = resolvedTheme === "dark";
 
-  function handleMouseLeave() {
-    gsap.to(containerRef.current, {
-      width: 52,
-      duration: 0.4,
-      ease: "power4.inOut",
-    });
-    gsap.to(collapsedRef.current, {
-      opacity: 1,
-      scale: 1,
-      duration: 0.2,
-      delay: 0.1,
-    });
-    gsap.to(expandedRef.current, { opacity: 0, duration: 0.2 });
-    gsap.to(indicatorRef.current, { opacity: 0, duration: 0.15 });
-    setHoveredOption(null);
-  }
+  // 30% scroll depth
+  useEffect(() => {
+    const check = () => {
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      setScrolled(max > 0 && window.scrollY / max >= 0.3);
+    };
+    window.addEventListener("scroll", check, { passive: true });
+    return () => window.removeEventListener("scroll", check);
+  }, []);
 
-  function handleBtnEnter(optValue: ThemeOption, idx: number) {
-    setHoveredOption(optValue);
-    const btn = btnRefs.current[idx];
-    const indicator = indicatorRef.current;
-    if (!btn || !indicator) return;
+  // Pill width: expands ONLY for scroll (to reveal up arrow)
+  useEffect(() => {
+    const w = scrolled ? PAD * 2 + BTN * 2 + GAP : H;
+    gsap.to(pillRef.current, { width: w, duration: 0.4, ease: "power4.inOut" });
+  }, [scrolled]);
 
-    // Use container (not btn.parentElement) as origin — expanded panel has padding
-    // that makes parentElement.left differ from the true left edge of the pill track.
-    // Forcing width/height to 36 keeps the indicator a perfect circle regardless of
-    // any stale GSAP value left from a previous render.
-    const btnRect = btn.getBoundingClientRect();
-    const containerRect = containerRef.current!.getBoundingClientRect();
+  // Icon slide animation — no expansion on hover, just swap in place
+  // mounted in deps so the initial gsap.set runs after the DOM exists
+  useLayoutEffect(() => {
+    if (!sunRef.current || !moonRef.current) return;
+    const sunX = isDark !== hovered ? BTN : 0;
+    const moonX = isDark !== hovered ? 0 : -BTN;
 
-    gsap.to(indicator, {
-      opacity: 1,
-      x: btnRect.left - containerRect.left,
-      width: 36,
-      height: 36,
-      duration: 0.25,
-      ease: "power3.out",
-    });
-
-    gsap.to(btn, { color: "#a855f7", duration: 0.15 });
-  }
-
-  function handleBtnLeave(idx: number) {
-    setHoveredOption(null);
-    const btn = btnRefs.current[idx];
-    if (!btn) return;
-    if (theme !== options[idx].value) {
-      gsap.to(btn, { color: "var(--text-secondary)", duration: 0.15 });
+    if (isFirstAnim.current) {
+      isFirstAnim.current = false;
+      gsap.set(sunRef.current, { x: sunX });
+      gsap.set(moonRef.current, { x: moonX });
+    } else {
+      gsap.to(sunRef.current, { x: sunX, duration: 0.3, ease: "power3.out" });
+      gsap.to(moonRef.current, { x: moonX, duration: 0.3, ease: "power3.out" });
     }
-  }
-
-  function handleBtnDown(idx: number) {
-    gsap.to(btnRefs.current[idx], { scale: 0.88, duration: 0.1 });
-  }
-
-  function handleBtnUp(idx: number) {
-    gsap.to(btnRefs.current[idx], {
-      scale: 1,
-      duration: 0.15,
-      ease: "back.out(2)",
-    });
-  }
+  }, [isDark, hovered, mounted]);
 
   if (!mounted) return null;
 
-  const displayActive = hoveredOption ?? (theme as ThemeOption);
+  // Purple ONLY while hovering (on the visible icon). Default is text-primary.
+  // sun is visible when isDark && hovered (dark+hover shows sun as light preview)
+  // moon is visible when !isDark && hovered (light+hover shows moon as dark preview)
+  const sunColor = isDark && hovered ? "#a855f7" : "var(--text-primary)";
+  const moonColor = !isDark && hovered ? "#a855f7" : "var(--text-primary)";
 
   return (
     <div
-      style={{ position: "fixed", bottom: "2rem", right: "2rem", zIndex: 100 }}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
+      style={{
+        position: "fixed",
+        bottom: "2rem",
+        right: "2rem",
+        zIndex: 100,
+        opacity: pillHovered ? 1 : 0.5,
+        transition: "opacity 0.3s ease",
+      }}
+      onMouseEnter={() => setPillHovered(true)}
+      onMouseLeave={() => setPillHovered(false)}
     >
       <div
-        ref={containerRef}
+        ref={pillRef}
         style={{
-          width: 52,
-          height: 52,
+          width: H,
+          height: H,
           overflow: "hidden",
           position: "relative",
           borderRadius: 999,
-          ...glassBox,
+          ...glass,
         }}
       >
-        {/* collapsed: single icon */}
-        <div
-          ref={collapsedRef}
+        {/* Theme button: hover/leave ONLY here — arrow must not trigger the slide */}
+        <button
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
+          onClick={() => {
+            setTheme(isDark ? "light" : "dark");
+            setHovered(false); // reset so new theme icon settles without reversing
+          }}
+          aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
           style={{
             position: "absolute",
-            inset: 0,
+            left: PAD,
+            top: (H - BTN) / 2,
+            width: BTN,
+            height: BTN,
+            overflow: "hidden",
+            borderRadius: 999,
+            border: "none",
+            background: "transparent",
+            cursor: "pointer",
+          }}
+        >
+          <div
+            ref={sunRef}
+            style={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: sunColor,
+              transition: "color 0.25s",
+            }}
+          >
+            <SunIcon />
+          </div>
+          <div
+            ref={moonRef}
+            style={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: moonColor,
+              transition: "color 0.25s",
+            }}
+          >
+            <MoonIcon />
+          </div>
+        </button>
+
+        {/* Up arrow: always in DOM, revealed when pill expands on scroll */}
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          aria-label="Back to top"
+          style={{
+            position: "absolute",
+            left: PAD + BTN + GAP,
+            top: (H - BTN) / 2,
+            width: BTN,
+            height: BTN,
+            borderRadius: 999,
+            border: "none",
+            background: "transparent",
+            cursor: "pointer",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             color: "var(--text-primary)",
-            pointerEvents: "none",
           }}
         >
-          {getCurrentIcon(theme)}
-        </div>
-
-        {/* expanded: 3 buttons */}
-        <div
-          ref={expandedRef}
-          style={{
-            position: "absolute",
-            inset: 0,
-            display: "flex",
-            alignItems: "center",
-            padding: "0 8px",
-            gap: 4,
-            opacity: 0,
-          }}
-        >
-          {/* sliding indicator — always 36×36 so it stays a perfect circle */}
-          <div
-            ref={indicatorRef}
-            style={{
-              position: "absolute",
-              top: 8,
-              left: 0,
-              width: 36,
-              height: 36,
-              borderRadius: 999,
-              opacity: 0,
-              border: "1px solid rgba(168,85,247,0.4)",
-              background: "rgba(168,85,247,0.15)",
-              pointerEvents: "none",
-            }}
-          />
-
-          {options.map((opt, idx) => (
-            <button
-              key={opt.value}
-              ref={(el) => {
-                btnRefs.current[idx] = el;
-              }}
-              onClick={() => setTheme(opt.value)}
-              onMouseEnter={() => handleBtnEnter(opt.value, idx)}
-              onMouseLeave={() => handleBtnLeave(idx)}
-              onMouseDown={() => handleBtnDown(idx)}
-              onMouseUp={() => handleBtnUp(idx)}
-              style={{
-                width: 36,
-                height: 36,
-                flexShrink: 0,
-                borderRadius: 999,
-                border: "none",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                background: "transparent",
-                color:
-                  displayActive === opt.value
-                    ? "#a855f7"
-                    : "var(--text-secondary)",
-                position: "relative",
-                zIndex: 1,
-              }}
-            >
-              {opt.icon}
-            </button>
-          ))}
-        </div>
+          <ArrowUpIcon />
+        </button>
       </div>
     </div>
   );

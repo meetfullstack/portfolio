@@ -3,11 +3,13 @@
 import { useRef } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
+import MatrixRain from "@/components/MatrixRain";
 import About from "@/components/About";
 import Projects from "@/components/Projects";
 import Contact from "@/components/Contact";
 import SectionDivider from "@/components/SectionDivider";
 import CornerButton from "@/components/CornerButton";
+import ScrambleText from "@/components/ScrambleText";
 import Image from "next/image";
 
 export default function Home() {
@@ -16,22 +18,9 @@ export default function Home() {
   useGSAP(
     () => {
       gsap.from(
-        [
-          ".hero-tag",
-          ".hero-heading",
-          ".hero-line",
-          ".hero-sub",
-          ".hero-cta",
-        ],
-        {
-          opacity: 0,
-          y: 30,
-          duration: 0.7,
-          stagger: 0.12,
-          ease: "power3.out",
-        },
+        [".hero-tag", ".hero-heading", ".hero-line", ".hero-sub", ".hero-cta"],
+        { opacity: 0, y: 30, duration: 0.7, stagger: 0.12, ease: "power3.out" },
       );
-
       gsap.from(".hero-image", {
         opacity: 0,
         scale: 0.9,
@@ -46,64 +35,68 @@ export default function Home() {
 
   return (
     <>
-      <section
-        ref={heroRef}
-        className="container grid min-h-[92vh] items-center gap-12 lg:grid-cols-[1.1fr_0.9fr]"
-      >
-        <div className="flex flex-col">
-          <p className="hero-tag section-tag mb-8">
-            {"// hello.world"} — available for work
-          </p>
+      <div className="relative overflow-hidden">
+        <MatrixRain />
+        <section
+          ref={heroRef}
+          className="container relative z-10 grid min-h-[92vh] items-center gap-12 lg:grid-cols-[1.1fr_0.9fr]"
+        >
+          <div className="flex flex-col">
+            <p className="hero-tag section-tag mb-8">
+              {"// hello.world"} — available for work
+            </p>
 
-          <h1
-            className="hero-heading font-bold tracking-tight"
-            style={{ fontSize: "clamp(2.5rem, 4vw, 3.5rem)", lineHeight: 1.2 }}
-          >
-            <span style={{ display: "block" }}>Hello, I&apos;m Meet —</span>
-            <span className="accent-text" style={{ display: "block" }}>
-              Full-Stack Developer.
-            </span>
-          </h1>
+            <h1
+              className="hero-heading font-bold tracking-tight"
+              style={{ fontSize: "clamp(2.5rem, 4vw, 3.5rem)", lineHeight: 1.2 }}
+            >
+              <span style={{ display: "block" }}>Hello, I&apos;m Meet —</span>
+              <ScrambleText
+                from="Full-Stack Developer."
+                to="Meet Upadhyay."
+                className="accent-text"
+                style={{ display: "block" }}
+              />
+            </h1>
 
-          <div
-            className="hero-line mt-8"
-            style={{ height: "1px", background: "var(--border)" }}
-          />
-
-          <p
-            className="hero-sub mt-8 max-w-xl text-base leading-relaxed"
-            style={{ color: "var(--text-secondary)" }}
-          >
-            I build fast, modern web applications with React, Next.js, and
-            TypeScript. Currently open to software engineering and Data/AI roles
-            in Toronto and remote.
-          </p>
-
-          <div className="hero-cta mt-10 flex flex-wrap gap-8">
-            <CornerButton href="#projects" variant="primary">
-              View my work
-            </CornerButton>
-            <CornerButton href="#contact" variant="secondary">
-              Get in touch
-            </CornerButton>
-          </div>
-
-
-        </div>
-
-        <div className="hero-image hidden lg:flex lg:justify-end">
-          <div className="hero-photo-frame">
-            <Image
-              src="/profile.jpg"
-              alt="Meet Upadhyay"
-              fill
-              priority
-              className="object-cover"
-              sizes="(max-width:1024px) 0px, 338px"
+            <div
+              className="hero-line mt-8"
+              style={{ height: "1px", background: "var(--border)" }}
             />
+
+            <p
+              className="hero-sub mt-8 max-w-xl text-base leading-relaxed"
+              style={{ color: "var(--text-secondary)" }}
+            >
+              I build fast, modern web applications with React, Next.js, and
+              TypeScript. Currently open to software engineering and Data/AI
+              roles in Toronto and remote.
+            </p>
+
+            <div className="hero-cta flex flex-wrap gap-8" style={{ marginTop: "15px" }}>
+              <CornerButton href="#projects" variant="primary">
+                View my work
+              </CornerButton>
+              <CornerButton href="#contact" variant="secondary">
+                Get in touch
+              </CornerButton>
+            </div>
           </div>
-        </div>
-      </section>
+
+          <div className="hero-image relative z-10 hidden lg:flex lg:justify-end">
+            <div className="hero-photo-frame">
+              <Image
+                src="/profile.jpg"
+                alt="Meet Upadhyay"
+                fill
+                priority
+                className="object-cover"
+                sizes="(max-width:1024px) 0px, 338px"
+              />
+            </div>
+          </div>
+        </section>
+      </div>
 
       <SectionDivider />
       <About />

@@ -25,7 +25,6 @@ export default function Footer() {
         <div className="flex flex-col gap-2">
           <p className="section-tag mb-1">links</p>
 
-          {/* Added missing '<a' */}
           <a
             href="https://github.com/meetfullstack"
             target="_blank"
@@ -35,8 +34,6 @@ export default function Footer() {
           >
             GitHub
           </a>
-
-          {/* Added missing '<a' */}
           <a
             href="https://linkedin.com/in/your-handle"
             target="_blank"
@@ -46,8 +43,6 @@ export default function Footer() {
           >
             LinkedIn
           </a>
-
-          {/* Added missing '<a' */}
           <a
             href="mailto:you@example.com"
             className="text-sm transition-colors hover:text-purple-400"

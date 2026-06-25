@@ -11,29 +11,26 @@ const links = [
   { href: "#contact", label: "Contact" },
 ];
 
-const navStyle = {
-  background: "color-mix(in srgb, var(--bg-primary) 95%, transparent)",
-  backdropFilter: "blur(16px)",
-  WebkitBackdropFilter: "blur(16px)",
-  borderBottom: "1px solid var(--border)",
-};
-
 const bubbleGlass = {
-  background: "rgba(168,85,247,0.1)",
+  background: "rgba(168,85,247,0.08)",
   boxShadow: [
-    "inset 0 0 0 1px rgba(168,85,247,0.35)",
-    "inset 2px 3px 0px -2px rgba(255,255,255,0.6)",
-    "inset -2px -2px 0px -2px rgba(255,255,255,0.4)",
-    "inset -0.3px -1px 4px 0px rgba(0,0,0,0.06)",
-    "0px 4px 16px 0px rgba(168,85,247,0.15)",
-    "0px 8px 24px 0px rgba(168,85,247,0.08)",
+    "inset 0 0 0 1px rgba(168,85,247,0.25)",
+    "inset 1px 2px 0px -1px rgba(255,255,255,0.5)",
+    "inset -1px -2px 0px -1px rgba(255,255,255,0.3)",
+    "0px 2px 12px 0px rgba(168,85,247,0.12)",
   ].join(", "),
 };
+
+function isDark() {
+  return document.documentElement.classList.contains("dark");
+}
 
 export default function Nav() {
   const headerRef = useRef<HTMLElement>(null);
   const bubbleRef = useRef<HTMLDivElement>(null);
   const navRef = useRef<HTMLElement>(null);
+  const logoRef = useRef<HTMLAnchorElement>(null);
+  const logoLineRef = useRef<HTMLSpanElement>(null);
 
   useGSAP(
     () => {
@@ -44,10 +41,36 @@ export default function Nav() {
         ease: "power3.out",
       });
     },
-    { scope: headerRef }
+    { scope: headerRef },
   );
 
-  // Move the single shared bubble to whichever link is hovered — avoids mounting/unmounting
+  function handleLogoEnter() {
+    // color targets the <Link> — SVG inherits via currentColor, text also shifts
+    gsap.to(logoRef.current, {
+      color: "#a855f7",
+      duration: 0.25,
+      ease: "power2.out",
+    });
+    gsap.to(logoLineRef.current, {
+      width: "100%",
+      duration: 0.3,
+      ease: "power2.out",
+    });
+  }
+
+  function handleLogoLeave() {
+    gsap.to(logoRef.current, {
+      color: "var(--text-primary)",
+      duration: 0.25,
+      ease: "power2.out",
+    });
+    gsap.to(logoLineRef.current, {
+      width: 0,
+      duration: 0.2,
+      ease: "power2.in",
+    });
+  }
+
   function handleMouseEnter(e: React.MouseEvent<HTMLAnchorElement>) {
     const nav = navRef.current;
     const bubble = bubbleRef.current;
@@ -64,7 +87,6 @@ export default function Nav() {
       ease: "power3.out",
     });
 
-    // purple text on hovered link
     gsap.to(e.currentTarget.querySelector("span"), {
       color: "#a855f7",
       duration: 0.2,
@@ -73,7 +95,7 @@ export default function Nav() {
 
   function handleMouseLeave(e: React.MouseEvent<HTMLAnchorElement>) {
     gsap.to(e.currentTarget.querySelector("span"), {
-      color: "var(--text-muted)",
+      color: isDark() ? "var(--text-muted)" : "var(--text-primary)",
       duration: 0.2,
     });
   }
@@ -85,16 +107,75 @@ export default function Nav() {
   return (
     <header
       ref={headerRef}
-      className="fixed top-0 left-0 right-0 z-50"
-      style={navStyle}
+      className="nav-header fixed top-0 left-0 right-0 z-50"
     >
-      <div className="flex w-full items-center justify-between px-6 py-5 lg:px-12">
+      <div
+        className="flex items-center justify-between"
+        style={{ maxWidth: 1200, margin: "0 auto", padding: "20px 48px" }}
+      >
+        {/* Logo: geometric M mark + meet.dev text, codedgar-style */}
         <Link
+          ref={logoRef}
           href="/"
-          className="font-mono font-medium accent-text"
-          style={{ fontSize: "13px", letterSpacing: "0.04em" }}
+          onMouseEnter={handleLogoEnter}
+          onMouseLeave={handleLogoLeave}
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "8px",
+            textDecoration: "none",
+            color: "var(--text-primary)",
+          }}
         >
-          Meet.dev
+          {/* Geometric MD mark — thick outline style */}
+          <svg
+            width="38"
+            height="20"
+            viewBox="0 -1 38 22"
+            fill="none"
+            aria-hidden="true"
+          >
+            <polyline
+              points="2,18 2,2 10,11 18,2 18,18"
+              stroke="currentColor"
+              strokeWidth="3"
+              strokeLinejoin="miter"
+              strokeLinecap="butt"
+            />
+            <path
+              d="M24,1 L24,17 L33,17 L36,14 L36,4 L33,1 Z"
+              stroke="currentColor"
+              strokeWidth="3"
+              strokeLinejoin="miter"
+            />
+          </svg>
+
+          <span
+            style={{
+              position: "relative",
+              fontFamily: "var(--font-mono)",
+              fontSize: "13px",
+              fontWeight: 500,
+              letterSpacing: "0.04em",
+            }}
+          >
+            Meet.dev
+            <span
+              ref={logoLineRef}
+              aria-hidden
+              style={{
+                position: "absolute",
+                bottom: -2,
+                left: 0,
+                height: "1.5px",
+                width: 0,
+                background: "#a855f7",
+                display: "block",
+                borderRadius: 999,
+              }}
+            />
+          </span>
         </Link>
 
         <nav
@@ -126,19 +207,20 @@ export default function Nav() {
               onMouseLeave={handleMouseLeave}
               style={{
                 position: "relative",
-                padding: "10px 22px",
+                padding: "8px 18px",
                 borderRadius: 999,
                 textDecoration: "none",
               }}
             >
               <span
+                className="nav-link-text"
                 style={{
                   position: "relative",
                   zIndex: 1,
                   fontFamily: "var(--font-mono)",
-                  fontSize: "0.78rem",
-                  color: "var(--text-muted)",
-                  letterSpacing: "0.04em",
+                  fontSize: "0.75rem",
+                  letterSpacing: "0.05em",
+                  fontWeight: 500,
                 }}
               >
                 {link.label}

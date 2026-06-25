@@ -1,7 +1,3 @@
-// CTA button matching codedgar's .btn + cursor-target corner-bracket hover.
-// The .btn keeps overflow:hidden for its fill wipe, so the 4 corner spans live
-// on the .btn-frame wrapper to avoid being clipped.
-
 type CornerButtonProps = {
   href: string;
   variant: "primary" | "secondary";
