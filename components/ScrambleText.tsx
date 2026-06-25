@@ -1,9 +1,12 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { useTheme } from "next-themes";
+import { useRef, useEffect } from "react";
 
-const CHARS = "!<>-_\\/[]{}=+*^?#~|.:@%$&";
+const CHARS = "▲■▌▓▒▐▪░▼▫►█";
+
+function randChar() {
+  return CHARS[Math.floor(Math.random() * CHARS.length)];
+}
 
 interface Props {
   from: string;
@@ -12,70 +15,165 @@ interface Props {
   style?: React.CSSProperties;
 }
 
-function rand(n: number) {
-  return Math.floor(Math.random() * n);
-}
-
 export default function ScrambleText({ from, to, className, style }: Props) {
-  const { resolvedTheme } = useTheme();
-  const maxLen    = Math.max(from.length, to.length);
-  const padFrom   = from.padEnd(maxLen, " ");
-  const padTo     = to.padEnd(maxLen, " ");
+  const spanRef = useRef<HTMLSpanElement>(null);
+  const rafRef = useRef<number | null>(null);
+  const activeRef = useRef(false);
 
-  const [chars, setChars] = useState<string[]>(() => padFrom.split(""));
-  const [isDud, setIsDud]  = useState<boolean[]>(() => Array(maxLen).fill(false));
-  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  // 1. Move functions UP before they are used in useEffect or JSX
+  function reveal(target: string) {
+    activeRef.current = false;
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
 
-  useEffect(() => () => { timers.current.forEach(clearTimeout); }, []);
+    const el = spanRef.current;
+    if (!el) return;
 
-  function scramble(fromText: string, toText: string) {
-    timers.current.forEach(clearTimeout);
-    timers.current = [];
+    const chars = target.split("");
+    const len = chars.length;
+    const duds = chars.map((c) => (c === " " ? " " : randChar()));
+    const DURATION = 1200;
+    const t0 = performance.now();
+    let frame = 0;
+    activeRef.current = true;
 
-    const len    = Math.max(fromText.length, toText.length);
-    const pFrom  = fromText.padEnd(len, " ");
-    const pTo    = toText.padEnd(len, " ");
+    function tick() {
+      if (!activeRef.current || !el) return;
+      const elapsed = performance.now() - t0;
+      const progress = Math.min(elapsed / DURATION, 1);
+      const eased = progress * progress; // quadratic ease-in
+      const revealed = Math.floor(eased * len);
+      frame++;
 
-    setChars(pFrom.split(""));
-    setIsDud(Array(len).fill(false));
+      el.textContent = chars
+        .map((c, i) => {
+          if (c === " ") return " ";
+          if (i < revealed) return c;
+          if (frame % 5 === 0) duds[i] = randChar();
+          return duds[i];
+        })
+        .join("");
 
-    for (let i = 0; i < len; i++) {
-      const delay = i * 40;
-      const steps = 5 + rand(5); // 5–9 visible symbol steps × 80ms = 400–720ms per char
-
-      for (let s = 0; s < steps; s++) {
-        const t = setTimeout(() => {
-          const sym = CHARS[rand(CHARS.length)];
-          setChars(prev => { const n = [...prev]; n[i] = sym; return n; });
-          setIsDud(prev => { const n = [...prev]; n[i] = true; return n; });
-        }, delay + s * 80);
-        timers.current.push(t);
+      if (progress < 1) {
+        rafRef.current = requestAnimationFrame(tick);
+      } else {
+        el.textContent = target;
+        activeRef.current = false;
       }
-
-      const done = setTimeout(() => {
-        setChars(prev => { const n = [...prev]; n[i] = pTo[i]; return n; });
-        setIsDud(prev => { const n = [...prev]; n[i] = false; return n; });
-      }, delay + steps * 80);
-      timers.current.push(done);
     }
+
+    rafRef.current = requestAnimationFrame(tick);
   }
 
-  const dudColor = resolvedTheme === "dark" ? "#e0e0e0" : "#222222";
+  function scramble(fromText: string, toText: string) {
+    activeRef.current = false;
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+
+    const el = spanRef.current;
+    if (!el) return;
+
+    const maxLen = Math.max(fromText.length, toText.length);
+    const padFrom = fromText.padEnd(maxLen, " ");
+    const padTo = toText.padEnd(maxLen, " ");
+
+    type Entry = {
+      from: string;
+      to: string;
+      start: number;
+      end: number;
+      dud: string;
+    };
+    const queue: Entry[] = Array.from({ length: maxLen }, (_, i) => {
+      const start = Math.floor((i / maxLen) * 10);
+      const end = start + 11 + Math.floor(Math.random() * 9);
+      return { from: padFrom[i], to: padTo[i], start, end, dud: randChar() };
+    });
+
+    let frame = 0;
+    let lastTime = 0;
+    const INTERVAL = 1000 / 30;
+    activeRef.current = true;
+
+    function tick(timestamp: number) {
+      if (!activeRef.current || !el) return;
+      if (timestamp - lastTime < INTERVAL) {
+        rafRef.current = requestAnimationFrame(tick);
+        return;
+      }
+      lastTime = timestamp;
+
+      let complete = 0;
+      let output = "";
+      for (const entry of queue) {
+        if (frame >= entry.end) {
+          complete++;
+          output += entry.to;
+        } else if (frame >= entry.start) {
+          if (Math.random() < 0.28) entry.dud = randChar();
+          output += entry.dud;
+        } else {
+          output += entry.from;
+        }
+      }
+      el.textContent = output;
+
+      if (complete === queue.length) {
+        el.textContent = toText;
+        activeRef.current = false;
+        return;
+      }
+      frame++;
+      rafRef.current = requestAnimationFrame(tick);
+    }
+
+    rafRef.current = requestAnimationFrame(tick);
+  }
+
+  // 2. NOW declare the useEffect, which can safely call `reveal`
+  useEffect(() => {
+    const el = spanRef.current;
+    if (!el) return;
+
+    // Pre-fill with random symbols
+    el.textContent = from
+      .split("")
+      .map((c) => (c === " " ? " " : randChar()))
+      .join("");
+
+    let timer: ReturnType<typeof setTimeout>;
+
+    const start = () => {
+      timer = setTimeout(() => reveal(from), 300);
+    };
+
+    const loaderActive = (window as Window & { __loaderActive?: boolean })
+      .__loaderActive;
+
+    if (loaderActive) {
+      // First visit — wait for loader to finish before revealing
+      window.addEventListener("portfolio:loader-done", start, { once: true });
+    } else {
+      // Return visit (no loader) — start after hero fade-in
+      start();
+    }
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("portfolio:loader-done", start);
+      activeRef.current = false;
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <span
+      ref={spanRef}
       className={className}
-      style={{ ...style, display: "block", whiteSpace: "nowrap" }}
+      style={style}
       onMouseEnter={() => scramble(from, to)}
       onMouseLeave={() => scramble(to, from)}
     >
-      {chars.map((ch, i) =>
-        isDud[i] ? (
-          <span key={i} style={{ color: dudColor }}>{ch}</span>
-        ) : (
-          <span key={i}>{ch}</span>
-        )
-      )}
+      {from}
     </span>
   );
 }

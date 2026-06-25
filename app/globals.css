@@ -140,6 +140,13 @@ body {
   background-clip: text;
 }
 
+/* Scramble dud chars — must override -webkit-text-fill-color: transparent inherited from .accent-text */
+.scramble-dud {
+  -webkit-text-fill-color: var(--text-primary);
+  color: var(--text-primary);
+  font-family: "Segoe UI Symbol", "Apple Symbols", "Noto Sans Symbols", sans-serif;
+}
+
 .section-tag {
   font-family: var(--font-mono);
   font-size: 0.7rem;
@@ -375,4 +382,51 @@ html.lenis body {
 
 .hero-photo-frame img {
   border-radius: 0 !important;
+}
+
+.photo-reveal {
+  position: absolute;
+  inset: 0;
+}
+
+.photo-trail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 30px;
+  z-index: 2;
+  pointer-events: none;
+  will-change: transform;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(168, 85, 247, 0.8)   12%,
+    rgba(139, 92, 246, 0.4)   30%,
+    rgba(168, 85, 247, 0.1)   60%,
+    transparent                100%
+  );
+  box-shadow:
+    0 0 12px rgba(255, 255, 255, 0.4),
+    0 0 25px rgba(168, 85, 247, 0.6),
+    0 0 50px rgba(168, 85, 247, 0.2),
+    0 0 80px rgba(139, 92, 246, 0.1);
+}
+
+.photo-trail::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(rgba(0, 255, 255, 0.15) 0%, transparent 60%);
+  transform: translateX(calc(-1 * var(--ca-offset, 1px)));
+  mix-blend-mode: screen;
+}
+
+.photo-trail::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(rgba(255, 0, 255, 0.12) 0%, transparent 60%);
+  transform: translateX(var(--ca-offset, 1px));
+  mix-blend-mode: screen;
 }

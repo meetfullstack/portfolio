@@ -13,6 +13,7 @@ export default function LoadingScreen() {
   useEffect(() => {
     if (sessionStorage.getItem("loaded")) return;
     sessionStorage.setItem("loaded", "1");
+    (window as Window & { __loaderActive?: boolean }).__loaderActive = true;
     const handle = requestAnimationFrame(() => {
       setShow(true);
     });
@@ -32,6 +33,8 @@ export default function LoadingScreen() {
           ease: "power4.inOut",
           onComplete: () => {
             document.body.style.overflow = "";
+            (window as Window & { __loaderDone?: boolean }).__loaderDone = true;
+            window.dispatchEvent(new CustomEvent("portfolio:loader-done"));
             setShow(false);
           },
         });
