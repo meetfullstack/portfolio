@@ -1,3 +1,4 @@
+import { ViewTransitions } from "next-view-transitions";
 import ThemeProvider from "@/components/ThemeProvider";
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
@@ -36,14 +37,16 @@ export default function RootLayout({
       className={`${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <ThemeProvider>
-          <SmoothScroll />
-          <LoadingScreen />
-          <Nav />
-          {children}
-          <Footer />
-          <ThemeToggle />
-        </ThemeProvider>
+        <ViewTransitions>
+          <ThemeProvider>
+            <SmoothScroll />
+            <LoadingScreen />
+            <Nav />
+            {children}
+            <Footer />
+            <ThemeToggle />
+          </ThemeProvider>
+        </ViewTransitions>
       </body>
     </html>
   );

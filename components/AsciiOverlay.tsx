@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 
-const CHARS = " ░▒▓█";
+const CHARS = " .";
 
 export default function AsciiOverlay({ src, style }: { src: string; style?: React.CSSProperties }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);

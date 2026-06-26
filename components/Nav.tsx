@@ -21,9 +21,6 @@ const bubbleGlass = {
   ].join(", "),
 };
 
-function isDark() {
-  return document.documentElement.classList.contains("dark");
-}
 
 export default function Nav() {
   const headerRef = useRef<HTMLElement>(null);
@@ -40,6 +37,12 @@ export default function Nav() {
         duration: 0.6,
         ease: "power3.out",
       });
+
+      const nav = navRef.current;
+      if (!nav) return;
+      const hideBubble = () => gsap.to(bubbleRef.current, { opacity: 0, duration: 0.2 });
+      nav.addEventListener("mouseleave", hideBubble);
+      return () => nav.removeEventListener("mouseleave", hideBubble);
     },
     { scope: headerRef },
   );
@@ -87,22 +90,8 @@ export default function Nav() {
       ease: "power3.out",
     });
 
-    gsap.to(e.currentTarget.querySelector("span"), {
-      color: "#a855f7",
-      duration: 0.2,
-    });
   }
 
-  function handleMouseLeave(e: React.MouseEvent<HTMLAnchorElement>) {
-    gsap.to(e.currentTarget.querySelector("span"), {
-      color: isDark() ? "var(--text-muted)" : "var(--text-primary)",
-      duration: 0.2,
-    });
-  }
-
-  function handleNavLeave() {
-    gsap.to(bubbleRef.current, { opacity: 0, duration: 0.2 });
-  }
 
   return (
     <header
@@ -181,7 +170,6 @@ export default function Nav() {
         <nav
           ref={navRef}
           className="relative flex items-center gap-1"
-          onMouseLeave={handleNavLeave}
         >
           {/* shared sliding bubble */}
           <div
@@ -204,7 +192,6 @@ export default function Nav() {
               key={link.href}
               href={link.href}
               onMouseEnter={handleMouseEnter}
-              onMouseLeave={handleMouseLeave}
               style={{
                 position: "relative",
                 padding: "8px 18px",

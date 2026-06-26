@@ -18,6 +18,9 @@ export default function SmoothScroll() {
       anchors: { offset: -80 },
     });
 
+    // Expose globally so other pages can call lenis.scrollTo(0, { immediate: true })
+    (window as Window & { __lenis?: Lenis }).__lenis = lenis;
+
     lenis.on("scroll", ScrollTrigger.update);
 
     const raf = (time: number) => lenis.raf(time * 1000);

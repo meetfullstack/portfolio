@@ -40,6 +40,7 @@
 
 html {
   scroll-padding-top: 72px;
+  overflow-x: hidden;
 }
 
 body {
@@ -316,10 +317,15 @@ body {
 
 .nav-link-text {
   color: var(--text-primary);
+  transition: color 0.2s ease;
 }
 
 .dark .nav-link-text {
-  color: var(--text-muted);
+  color: #ffffff;
+}
+
+a:hover .nav-link-text {
+  color: #a855f7;
 }
 
 /* Lenis smooth scroll */
@@ -389,7 +395,8 @@ html.lenis body {
   inset: 0;
 }
 
-.photo-trail {
+.photo-trail,
+.pi-trail {
   position: absolute;
   left: 0;
   right: 0;
@@ -413,13 +420,45 @@ html.lenis body {
     0 0 80px rgba(139, 92, 246, 0.1);
 }
 
-.photo-trail::before {
+.photo-trail::before,
+.pi-trail::before {
   content: "";
   position: absolute;
   inset: 0;
   background: linear-gradient(rgba(0, 255, 255, 0.15) 0%, transparent 60%);
   transform: translateX(calc(-1 * var(--ca-offset, 1px)));
   mix-blend-mode: screen;
+}
+
+/* ── View Transitions ─────────────────────────────────────── */
+
+/* Page root: subtle scale + fade out/in */
+::view-transition-old(root) {
+  animation: 280ms cubic-bezier(0.4, 0, 1, 1) both vt-scale-out;
+}
+::view-transition-new(root) {
+  animation: 380ms cubic-bezier(0, 0, 0.2, 1) 60ms both vt-scale-in;
+}
+
+@keyframes vt-scale-out {
+  from { opacity: 1; transform: scale(1); }
+  to   { opacity: 0; transform: scale(0.97); }
+}
+@keyframes vt-scale-in {
+  from { opacity: 0; transform: scale(1.03); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* Named elements: browser handles morph position/size; just tune timing */
+::view-transition-group(*) {
+  animation-duration: 520ms;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+::view-transition-old(*),
+::view-transition-new(*) {
+  animation-duration: 520ms;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  mix-blend-mode: normal;
 }
 
 .photo-trail::after {

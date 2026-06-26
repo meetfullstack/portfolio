@@ -9,7 +9,6 @@ import Contact from "@/components/Contact";
 import SectionDivider from "@/components/SectionDivider";
 import CornerButton from "@/components/CornerButton";
 import ScrambleText from "@/components/ScrambleText";
-import AsciiOverlay from "@/components/AsciiOverlay";
 import Image from "next/image";
 
 export default function Home() {
@@ -34,7 +33,7 @@ export default function Home() {
       // Text: one by one (codedgar values)
       tl.fromTo(".hero-tag",     from, to(), 0 * 0.16)
         .fromTo(".hero-heading", from, to(), 1 * 0.16)
-        .fromTo(".hero-line",    from, to(), 2 * 0.16)
+
         .fromTo(".hero-sub",     from, to(), 3 * 0.16)
         .fromTo(".hero-cta",     from, to(), 4 * 0.16);
 
@@ -49,20 +48,16 @@ export default function Home() {
         { clipPath: "inset(0px 0px 0px 0px)", filter: "blur(0px) hue-rotate(0deg)", duration: D, ease: "circ.inOut" },
         photoStart);
 
-      // Trail wrap clips open in sync with photo (trail only visible at reveal edge)
-      tl.fromTo(".photo-trail-wrap",
-        { clipPath: `inset(${h}px 0px 0px 0px)` },
-        { clipPath: "inset(0px 0px 0px 0px)", duration: D, ease: "circ.inOut" },
-        photoStart);
-
-      // Trail sweeps bottom → top
-      tl.fromTo(".photo-trail", { y: h }, { y: -30, duration: D, ease: "circ.inOut" }, photoStart);
+      // Trail sweeps bottom → top; frame's overflow:hidden clips it naturally
+      gsap.set(".photo-trail", { y: h });
+      tl.to(".photo-trail", { y: -30, duration: D, ease: "circ.inOut",
+        onComplete: () => gsap.set(".photo-trail", { display: "none" }) }, photoStart);
 
       // Chromatic aberration: grows then shrinks (codedgar)
       tl.fromTo(".photo-trail", { "--ca-offset": "1px" }, { "--ca-offset": "4px", duration: D * 0.5, ease: "power2.in" }, photoStart)
         .to(".photo-trail", { "--ca-offset": "1px", duration: D * 0.5, ease: "power2.out" }, photoStart + D * 0.5);
 
-      // ASCII overlay clips away from bottom (disappears upward, same direction as photo reveal)
+      // Blurred overlay clips away from bottom (disappears upward as sharp photo reveals below)
       tl.fromTo(".ascii-overlay",
         { clipPath: "inset(0px 0px 0px 0px)" },
         { clipPath: `inset(0px 0px ${h}px 0px)`, duration: D, ease: "circ.inOut" },
@@ -77,13 +72,15 @@ export default function Home() {
         .to(".photo-reveal",     { filter: "blur(0px) hue-rotate(0deg)",  duration: 0.05, ease: "none" }, shakeAt + 0.05);
     }
 
+    // Always pre-hide immediately — loader covers the page so this is invisible on first visit
+    gsap.set([".hero-tag", ".hero-heading", ".hero-sub", ".hero-cta"], { opacity: 0, y: 20 });
+    gsap.set(".hero-image", { opacity: 0 });
+
     if (loaderActive && !loaderDone) {
       // First visit — loader is still running, wait for it
       window.addEventListener("portfolio:loader-done", animateHero, { once: true });
     } else {
-      // Return visit or loader already done — pre-hide then animate immediately
-      gsap.set([".hero-tag", ".hero-heading", ".hero-line", ".hero-sub", ".hero-cta"], { opacity: 0, y: 20 });
-      gsap.set(".hero-image", { opacity: 0 });
+      // Return visit or loader already done — animate immediately
       animateHero();
     }
 
@@ -99,10 +96,10 @@ export default function Home() {
         <MatrixRain />
         <section
           ref={heroRef}
-          className="container relative z-10 grid min-h-[92vh] items-center gap-12 lg:grid-cols-[1.1fr_0.9fr]"
+          className="container relative z-10 grid min-h-[92vh] items-center gap-12 lg:grid-cols-[1fr_338px]"
         >
           <div className="flex flex-col min-w-0">
-            <p className="hero-tag section-tag mb-8">
+            <p className="hero-tag section-tag mb-6">
               {"// hello.world"} — available for work
             </p>
 
@@ -111,32 +108,26 @@ export default function Home() {
               style={{ fontSize: "clamp(2.5rem, 4vw, 3.5rem)", lineHeight: 1.2 }}
             >
               <span style={{ display: "block" }}>Hello, I&apos;m Meet —</span>
-              {/* Fixed-height wrapper: locks the scramble text to one line so GSAP content changes never shift the photo or buttons */}
-              <span style={{ display: "block", height: "1.2em", overflow: "hidden" }}>
+              <span style={{ display: "block", minHeight: "1.2em" }}>
                 <ScrambleText
                   from="Full-Stack Developer"
-                  to="Meet Upadhyay"
+                  to="Building AI Applications"
                   className="accent-text"
                   style={{ display: "block", whiteSpace: "nowrap" }}
                 />
               </span>
             </h1>
 
-            <div
-              className="hero-line mt-8"
-              style={{ height: "1px", background: "var(--border)" }}
-            />
-
             <p
-              className="hero-sub mt-8 max-w-xl text-base leading-relaxed"
-              style={{ color: "var(--text-secondary)" }}
+              className="hero-sub max-w-xl text-base leading-relaxed"
+              style={{ color: "var(--text-secondary)", marginTop: "0.8rem" }}
             >
               I build fast, modern web applications with React, Next.js, and
               TypeScript. Currently open to software engineering and Data/AI
               roles in Toronto and remote.
             </p>
 
-            <div className="hero-cta flex flex-wrap gap-8" style={{ marginTop: "15px" }}>
+            <div className="hero-cta flex flex-wrap gap-8" style={{ marginTop: "1.3rem" }}>
               <CornerButton href="#projects" variant="primary">
                 View my work
               </CornerButton>
@@ -158,13 +149,10 @@ export default function Home() {
                   sizes="(max-width:1024px) 0px, 338px"
                 />
               </div>
-              {/* Trail wrap clips in sync with photo so trail only shows at reveal edge */}
-              <div className="photo-trail-wrap" style={{ position: "absolute", inset: 0, zIndex: 2, pointerEvents: "none" }}>
-                <div className="photo-trail" style={{ position: "absolute", left: 0, right: 0, top: 0, height: 30, willChange: "transform" }} />
-              </div>
-              {/* ASCII overlay — sits on top, clips away upward as photo scans in below */}
-              <div className="ascii-overlay" style={{ position: "absolute", inset: 0, zIndex: 3, pointerEvents: "none" }}>
-                <AsciiOverlay src="/profile.jpg" />
+              <div className="photo-trail" style={{ position: "absolute", left: 0, right: 0, top: 0, height: 30, zIndex: 2, pointerEvents: "none", willChange: "transform" }} />
+              {/* Blurred overlay — clips away upward as sharp photo reveals below */}
+              <div className="ascii-overlay" style={{ position: "absolute", inset: 0, zIndex: 3, pointerEvents: "none", overflow: "hidden" }}>
+                <Image src="/profile.jpg" alt="" fill className="object-cover" sizes="338px" style={{ filter: "blur(14px)", transform: "scale(1.05)" }} />
               </div>
             </div>
           </div>
