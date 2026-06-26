@@ -36,7 +36,7 @@ export default function About() {
       });
 
       tl.from(".about-tag", { opacity: 0, y: 20, duration: 0.5, ease: "power3.out" })
-        .from(".about-heading", { opacity: 0, y: 30, duration: 0.6, ease: "power3.out" }, "-=0.3")
+        .from(".about-word", { opacity: 0, y: "100%", duration: 0.5, stagger: 0.08, ease: "power3.out" }, "-=0.2")
         .from(".about-card", {
           opacity: 0,
           y: 40,
@@ -88,8 +88,12 @@ export default function About() {
         <div className="relative flex items-start justify-between">
           <div>
             <p className="about-tag section-tag mb-3">01 // about.me</p>
-            <h2 className="about-heading text-4xl font-bold tracking-tight sm:text-5xl">
-              Who I am
+            <h2 className="text-4xl font-bold tracking-tight sm:text-5xl" style={{ overflow: "hidden" }}>
+              {"Who I am".split(" ").map((word) => (
+                <span key={word} style={{ display: "inline-block", overflow: "hidden", marginRight: "0.3em" }}>
+                  <span className="about-word" style={{ display: "inline-block" }}>{word}</span>
+                </span>
+              ))}
             </h2>
           </div>
           <span aria-hidden="true" className="about-tag section-number">

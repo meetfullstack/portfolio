@@ -165,6 +165,7 @@ export default function Home() {
       <Projects />
       <SectionDivider />
       <Contact />
+      <SectionDivider />
     </>
   );
 }

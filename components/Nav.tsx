@@ -74,6 +74,21 @@ export default function Nav() {
     });
   }
 
+  function handleHashClick(e: React.MouseEvent<HTMLAnchorElement>) {
+    const href = e.currentTarget.getAttribute("href") ?? "";
+    if (href.startsWith("#")) {
+      e.preventDefault();
+      const target = document.querySelector(href);
+      if (!target) return;
+      const lenis = (window as Window & { __lenis?: { scrollTo: (el: Element, opts?: object) => void } }).__lenis;
+      if (lenis) {
+        lenis.scrollTo(target, { offset: -80 });
+      } else {
+        target.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+  }
+
   function handleMouseEnter(e: React.MouseEvent<HTMLAnchorElement>) {
     const nav = navRef.current;
     const bubble = bubbleRef.current;
@@ -191,6 +206,7 @@ export default function Nav() {
             <a
               key={link.href}
               href={link.href}
+              onClick={handleHashClick}
               onMouseEnter={handleMouseEnter}
               style={{
                 position: "relative",

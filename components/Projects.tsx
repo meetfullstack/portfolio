@@ -182,8 +182,8 @@ export default function Projects() {
         },
       });
 
-      tl.from(".projects-tag",     { opacity: 0, y: 20, duration: 0.5, ease: "power3.out" })
-        .from(".projects-heading", { opacity: 0, y: 30, duration: 0.6, ease: "power3.out" }, "-=0.3")
+      tl.from(".projects-tag",  { opacity: 0, y: 20, duration: 0.5, ease: "power3.out" })
+        .from(".projects-word", { opacity: 0, y: "100%", duration: 0.5, stagger: 0.08, ease: "power3.out" }, "-=0.2")
         .from(".project-card",     { opacity: 0, y: 50, duration: 0.7, stagger: 0.15, ease: "power3.out" }, "-=0.2");
 
       gsap.to(".section-number", {
@@ -248,8 +248,12 @@ export default function Projects() {
         <div className="relative flex items-start justify-between">
           <div>
             <p className="projects-tag section-tag mb-3">02 // projects.work</p>
-            <h2 className="projects-heading text-4xl font-bold tracking-tight sm:text-5xl">
-              Things I have built
+            <h2 className="text-4xl font-bold tracking-tight sm:text-5xl">
+              {"Things I have built".split(" ").map((word) => (
+                <span key={word} style={{ display: "inline-block", overflow: "hidden", marginRight: "0.3em" }}>
+                  <span className="projects-word" style={{ display: "inline-block" }}>{word}</span>
+                </span>
+              ))}
             </h2>
           </div>
           <span aria-hidden="true" className="projects-tag section-number">02</span>

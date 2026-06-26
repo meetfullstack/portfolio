@@ -35,7 +35,7 @@ export default function Contact() {
       });
 
       tl.from(".contact-tag", { opacity: 0, y: 20, duration: 0.5, ease: "power3.out" })
-        .from(".contact-heading", { opacity: 0, y: 30, duration: 0.6, ease: "power3.out" }, "-=0.3")
+        .from(".contact-word", { opacity: 0, y: "100%", duration: 0.5, stagger: 0.08, ease: "power3.out" }, "-=0.2")
         .from(".contact-subtext", { opacity: 0, y: 20, duration: 0.5, ease: "power3.out" }, "-=0.3")
         .from(".contact-form", { opacity: 0, y: 40, duration: 0.7, ease: "power3.out" }, "-=0.2");
 
@@ -104,8 +104,12 @@ export default function Contact() {
         <div className="relative flex items-start justify-between">
           <div>
             <p className="contact-tag section-tag mb-3">03 // contact.me</p>
-            <h2 className="contact-heading text-4xl font-bold tracking-tight sm:text-5xl">
-              Get in touch
+            <h2 className="text-4xl font-bold tracking-tight sm:text-5xl">
+              {"Get in touch".split(" ").map((word) => (
+                <span key={word} style={{ display: "inline-block", overflow: "hidden", marginRight: "0.3em" }}>
+                  <span className="contact-word" style={{ display: "inline-block" }}>{word}</span>
+                </span>
+              ))}
             </h2>
           </div>
           <span aria-hidden="true" className="contact-tag section-number">
