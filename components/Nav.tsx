@@ -40,7 +40,7 @@ export default function Nav() {
 
       const nav = navRef.current;
       if (!nav) return;
-      const hideBubble = () => gsap.to(bubbleRef.current, { opacity: 0, duration: 0.2 });
+      const hideBubble = () => gsap.to(bubbleRef.current, { opacity: 0, duration: 0.2, overwrite: true });
       nav.addEventListener("mouseleave", hideBubble);
       return () => nav.removeEventListener("mouseleave", hideBubble);
     },
@@ -105,6 +105,7 @@ export default function Nav() {
       width: linkRect.width - 14,
       duration: 0.3,
       ease: "power3.out",
+      overwrite: true,
     });
 
   }
