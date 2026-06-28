@@ -39,31 +39,46 @@ export default function ProjectPage() {
       gsap.from(".ph-role",     { opacity: 0, y: 16, duration: 0.5, ease: "power3.out", delay: 0.45 });
       gsap.from(".ph-subtitle", { opacity: 0, y: 14, duration: 0.5, ease: "power3.out", delay: 0.5 });
 
-      // Photo reveal — plays immediately on page open, no scroll needed
-      const frame = document.querySelector(".ph-image") as HTMLElement;
-      const h = frame ? frame.offsetHeight : 400;
-      const D = 2.5;
+      // Hide image immediately before it flashes — then animate once height is known
+      gsap.set(".pi-reveal", { filter: "blur(10px)", clipPath: "inset(100% 0px 0px 0px)" });
+      gsap.set(".pi-blur",   { clipPath: "inset(0px 0px 0px 0px)" });
 
-      const tl = gsap.timeline({ delay: 0.4 });
+      const runImageReveal = () => {
+        const frame = document.querySelector(".ph-image") as HTMLElement;
+        const h = frame ? frame.offsetHeight : 400;
+        const D = 2.5;
 
-      tl.fromTo(".pi-reveal",
-        { clipPath: `inset(${h}px 0px 0px 0px)`, filter: "blur(10px)" },
-        { clipPath: "inset(0px 0px 0px 0px)", filter: "blur(0px)", duration: D, ease: "circ.inOut" });
+        gsap.set(".pi-reveal", { clipPath: `inset(${h}px 0px 0px 0px)` });
+        gsap.set(".pi-trail",  { y: h });
 
-      gsap.set(".pi-trail", { y: h });
-      tl.to(".pi-trail", { y: -30, duration: D, ease: "circ.inOut",
-        onComplete: () => gsap.set(".pi-trail", { display: "none" }) }, 0);
+        const tl = gsap.timeline({ delay: 0.3 });
 
-      tl.fromTo(".pi-blur",
-        { clipPath: "inset(0px 0px 0px 0px)" },
-        { clipPath: `inset(0px 0px ${h}px 0px)`, duration: D, ease: "circ.inOut" }, 0);
+        tl.fromTo(".pi-reveal",
+          { clipPath: `inset(${h}px 0px 0px 0px)`, filter: "blur(10px)" },
+          { clipPath: "inset(0px 0px 0px 0px)", filter: "blur(0px)", duration: D, ease: "circ.inOut" });
 
-      const shakeAt = D * 0.85;
-      tl.to(".ph-image", { skewX: 1.5,  x:  3, duration: 0.04, ease: "none" }, shakeAt)
-        .to(".ph-image", { skewX: -0.8, x: -2, duration: 0.04, ease: "none" }, shakeAt + 0.04)
-        .to(".ph-image", { skewX: 0,    x:  0, duration: 0.03, ease: "power2.out" }, shakeAt + 0.08)
-        .to(".pi-reveal", { filter: "blur(0px) hue-rotate(15deg)", duration: 0.05 }, shakeAt)
-        .to(".pi-reveal", { filter: "blur(0px) hue-rotate(0deg)",  duration: 0.05 }, shakeAt + 0.05);
+        tl.to(".pi-trail", { y: -30, duration: D, ease: "circ.inOut",
+          onComplete: () => gsap.set(".pi-trail", { display: "none" }) }, 0);
+
+        tl.fromTo(".pi-blur",
+          { clipPath: "inset(0px 0px 0px 0px)" },
+          { clipPath: `inset(0px 0px ${h}px 0px)`, duration: D, ease: "circ.inOut" }, 0);
+
+        const shakeAt = D * 0.85;
+        tl.to(".ph-image", { skewX: 1.5,  x:  3, duration: 0.04, ease: "none" }, shakeAt)
+          .to(".ph-image", { skewX: -0.8, x: -2, duration: 0.04, ease: "none" }, shakeAt + 0.04)
+          .to(".ph-image", { skewX: 0,    x:  0, duration: 0.03, ease: "power2.out" }, shakeAt + 0.08)
+          .to(".pi-reveal", { filter: "blur(0px) hue-rotate(15deg)", duration: 0.05 }, shakeAt)
+          .to(".pi-reveal", { filter: "blur(0px) hue-rotate(0deg)",  duration: 0.05 }, shakeAt + 0.05);
+      };
+
+      // Wait for image to load so offsetHeight is correct
+      const img = document.querySelector(".pi-reveal img") as HTMLImageElement;
+      if (img && !img.complete) {
+        img.addEventListener("load", runImageReveal, { once: true });
+      } else {
+        runImageReveal();
+      }
 
       // Sidebar + content
       gsap.from(".ph-sidebar", { opacity: 0, x: -20, duration: 0.6, ease: "power3.out",
