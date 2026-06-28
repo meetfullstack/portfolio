@@ -4,20 +4,21 @@ import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 
 export default function LoadingScreen() {
-  const [show, setShow] = useState(false);
+  // Start as null (unknown) — resolved synchronously on first client paint
+  const [show, setShow] = useState<boolean | null>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const fillRectRef = useRef<SVGRectElement>(null);
   const outlineRef = useRef<SVGTextElement>(null);
 
   // Only show once per browser session — skip on refresh/navigation
   useEffect(() => {
-    if (sessionStorage.getItem("loaded")) return;
+    if (sessionStorage.getItem("loaded")) {
+      setShow(false);
+      return;
+    }
     sessionStorage.setItem("loaded", "1");
     (window as Window & { __loaderActive?: boolean }).__loaderActive = true;
-    const handle = requestAnimationFrame(() => {
-      setShow(true);
-    });
-    return () => cancelAnimationFrame(handle);
+    setShow(true);
   }, []);
 
   useEffect(() => {
@@ -47,7 +48,8 @@ export default function LoadingScreen() {
 
   }, [show]);
 
-  if (!show) return null;
+  // null = not yet resolved; show blocker to prevent flash
+  if (show === false) return null;
 
   return (
     <div
