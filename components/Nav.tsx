@@ -5,8 +5,8 @@ import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import Link from "next/link";
 // Switch between pixel cat and SVG cat by changing this one import
-// import NavCat from "@/components/NavCat";       // pixel art version
-import NavCat from "@/components/NavCatSVG";      // smooth SVG version
+import NavCat from "@/components/NavCat";          // pixel art version (orange tabby)
+// import NavCat from "@/components/NavCatSVG";   // smooth SVG version
 
 const links = [
   { href: "/#about", label: "About" },
