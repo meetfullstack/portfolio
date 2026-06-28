@@ -389,26 +389,26 @@ export default function NavCatSVG() {
         {bubble && (
           <div style={{
             position: "absolute", bottom: CH + 10, left: "50%", transform: "translateX(-50%)",
-            background: "rgba(10,10,20,0.88)",
-            border: "1px solid rgba(168,85,247,0.45)",
+            background: "rgba(245,230,204,0.92)",
+            border: "1px solid rgba(217,139,60,0.6)",
             backdropFilter: "blur(8px)",
-            color: "#e0d4ff",
+            color: "#5a2800",
             fontFamily: "var(--font-mono)", fontSize: "0.58rem",
             padding: "4px 10px", borderRadius: "6px",
             whiteSpace: "nowrap", pointerEvents: "none",
-            boxShadow: "0 2px 12px rgba(168,85,247,0.25)",
+            boxShadow: "0 2px 12px rgba(217,139,60,0.3)",
             zIndex: 60,
           }}>
             {bubble}
             <span style={{
               position: "absolute", bottom: -5, left: "50%", transform: "translateX(-50%)",
               borderLeft: "4px solid transparent", borderRight: "4px solid transparent",
-              borderTop: "5px solid rgba(168,85,247,0.45)",
+              borderTop: "5px solid rgba(217,139,60,0.6)",
             }} />
           </div>
         )}
 
-        {/* SVG cat */}
+        {/* SVG cat — orange tabby */}
         <svg
           width={CW}
           height={CH}
@@ -416,114 +416,119 @@ export default function NavCatSVG() {
           style={{ display: "block", overflow: "visible" }}
         >
           <defs>
-            {/* Purple eye glow */}
-            <filter id="svg-cat-eye-glow" x="-80%" y="-80%" width="260%" height="260%">
-              <feGaussianBlur stdDeviation="2.5" result="blur" />
-              <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-            </filter>
-            {/* Soft body glow */}
-            <filter id="svg-cat-body-glow" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="1" result="blur" />
-              <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+            <filter id="svg-cat-drop" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="1" stdDeviation="1" floodColor="#A86018" floodOpacity="0.35" />
             </filter>
           </defs>
 
-          {/* Everything inside this group gets flipped for direction */}
           <g ref={catGroupRef} style={{ transformOrigin: `${CW / 2}px ${CH}px` }}>
 
-            {/* ── Tail ── */}
+            {/* ── Tail (outline then fill) ── */}
+            <path
+              d="M 10 34 C 4 30, 2 24, 6 20 C 8 18, 10 20, 8 22"
+              fill="none" stroke="#1a0a00" strokeWidth="6" strokeLinecap="round"
+              style={{ transformOrigin: "10px 34px" }}
+            />
             <path
               ref={tailRef}
               d="M 10 34 C 4 30, 2 24, 6 20 C 8 18, 10 20, 8 22"
-              fill="none"
-              stroke="#1a1a2e"
-              strokeWidth="4"
-              strokeLinecap="round"
+              fill="none" stroke="#D98B3C" strokeWidth="4" strokeLinecap="round"
               style={{ transformOrigin: "10px 34px" }}
             />
 
-            {/* ── Body ── */}
+            {/* ── Body outline + orange fill + cream belly ── */}
+            <ellipse cx="24" cy="32" rx="16" ry="10" fill="#1a0a00" />
             <ellipse
               ref={bodyRef}
-              cx="24"
-              cy="32"
-              rx="15"
-              ry="9"
-              fill="#1a1a2e"
-              filter="url(#svg-cat-body-glow)"
+              cx="24" cy="32" rx="15" ry="9"
+              fill="#D98B3C"
+              filter="url(#svg-cat-drop)"
             />
+            {/* Tabby stripes */}
+            <line x1="15" y1="27" x2="14" y2="37" stroke="#A86018" strokeWidth="1.5" strokeLinecap="round" />
+            <line x1="34" y1="27" x2="35" y2="37" stroke="#A86018" strokeWidth="1.5" strokeLinecap="round" />
+            {/* Cream belly */}
+            <ellipse cx="24" cy="33" rx="8" ry="6" fill="#F5E6CC" />
 
-            {/* ── Legs ── */}
-            <rect ref={legFLRef} x="12" y="37" width="5" height="7" rx="2.5" fill="#1a1a2e" />
-            <rect ref={legFRRef} x="19" y="37" width="5" height="7" rx="2.5" fill="#1a1a2e" />
-            <rect ref={legBLRef} x="26" y="37" width="5" height="7" rx="2.5" fill="#0d0d1a" />
-            <rect ref={legBRRef} x="33" y="37" width="5" height="7" rx="2.5" fill="#0d0d1a" />
+            {/* ── Legs (orange + cream paw tips) ── */}
+            <rect ref={legFLRef} x="11" y="37" width="5" height="8" rx="2.5" fill="#1a0a00" />
+            <rect x="11.5" y="37" width="4" height="7" rx="2" fill="#D98B3C" />
+            <ellipse cx="13.5" cy="44.5" rx="2.2" ry="1.2" fill="#F5E6CC" />
 
-            {/* ── Head ── */}
+            <rect ref={legFRRef} x="18" y="37" width="5" height="8" rx="2.5" fill="#1a0a00" />
+            <rect x="18.5" y="37" width="4" height="7" rx="2" fill="#D98B3C" />
+            <ellipse cx="20.5" cy="44.5" rx="2.2" ry="1.2" fill="#F5E6CC" />
+
+            <rect ref={legBLRef} x="26" y="37" width="5" height="8" rx="2.5" fill="#1a0a00" />
+            <rect x="26.5" y="37" width="4" height="7" rx="2" fill="#D98B3C" />
+            <ellipse cx="28.5" cy="44.5" rx="2.2" ry="1.2" fill="#F5E6CC" />
+
+            <rect ref={legBRRef} x="33" y="37" width="5" height="8" rx="2.5" fill="#1a0a00" />
+            <rect x="33.5" y="37" width="4" height="7" rx="2" fill="#D98B3C" />
+            <ellipse cx="35.5" cy="44.5" rx="2.2" ry="1.2" fill="#F5E6CC" />
+
+            {/* ── Head outline + orange fill + cream face ── */}
+            <circle cx="38" cy="18" r="13" fill="#1a0a00" />
             <circle
               ref={headRef}
-              cx="38"
-              cy="18"
-              r="12"
-              fill="#1a1a2e"
+              cx="38" cy="18" r="12"
+              fill="#D98B3C"
             />
+            {/* Light orange highlight on top */}
+            <ellipse cx="38" cy="12" rx="7" ry="4" fill="#EFB060" opacity="0.6" />
+            {/* Cream face */}
+            <ellipse cx="38" cy="20" rx="7" ry="8" fill="#F5E6CC" />
+            {/* Cheek stripe marks */}
+            <line x1="28" y1="15" x2="27" y2="19" stroke="#A86018" strokeWidth="1.2" strokeLinecap="round" />
+            <line x1="29" y1="13" x2="28.5" y2="17" stroke="#A86018" strokeWidth="1.2" strokeLinecap="round" />
 
             {/* ── Ears ── */}
-            {/* Left ear */}
-            <polygon points="28,8 32,16 26,16" fill="#1a1a2e" />
-            <polygon points="29,9 31,15 27,15" fill="#3a0d50" />
-            {/* Right ear */}
-            <polygon points="46,8 42,16 48,16" fill="#1a1a2e" />
-            <polygon points="45,9 43,15 47,15" fill="#3a0d50" />
+            <polygon points="28,8 32,17 26,17" fill="#1a0a00" />
+            <polygon points="29,10 31,16 27,16" fill="#D98B3C" />
+            <polygon points="29.5,11 31,15.5 27.5,15.5" fill="#F4A0A0" />
 
-            {/* ── Eyes ── */}
+            <polygon points="46,8 42,17 48,17" fill="#1a0a00" />
+            <polygon points="45,10 43,16 47,16" fill="#D98B3C" />
+            <polygon points="44.5,11 43,15.5 46.5,15.5" fill="#F4A0A0" />
+
+            {/* ── Eyes — big black with white shine ── */}
             <ellipse
               ref={eyeLRef}
-              cx="33"
-              cy="17"
-              rx="3"
-              ry="3"
-              fill="#a855f7"
-              filter="url(#svg-cat-eye-glow)"
+              cx="33" cy="17" rx="3.5" ry="3.5"
+              fill="#1a0a00"
             />
+            <circle cx="34.3" cy="15.5" r="1.3" fill="#FFFFFF" />
+
             <ellipse
               ref={eyeRRef}
-              cx="43"
-              cy="17"
-              rx="3"
-              ry="3"
-              fill="#a855f7"
-              filter="url(#svg-cat-eye-glow)"
+              cx="43" cy="17" rx="3.5" ry="3.5"
+              fill="#1a0a00"
             />
-            {/* Eye pupils */}
-            <ellipse cx="33" cy="17" rx="1.5" ry="1.8" fill="#0d0d1a" />
-            <ellipse cx="43" cy="17" rx="1.5" ry="1.8" fill="#0d0d1a" />
-            {/* Eye shines */}
-            <circle cx="34" cy="16" r="0.9" fill="#ddd6ff" />
-            <circle cx="44" cy="16" r="0.9" fill="#ddd6ff" />
+            <circle cx="44.3" cy="15.5" r="1.3" fill="#FFFFFF" />
 
             {/* ── Nose ── */}
-            <ellipse cx="38" cy="21" rx="1.5" ry="1" fill="#ff9eb5" />
+            <ellipse cx="38" cy="22" rx="1.8" ry="1.2" fill="#F4A0A0" />
 
             {/* ── Mouth ── */}
-            <path d="M 36 22 Q 38 24 40 22" fill="none" stroke="#0d0d1a" strokeWidth="0.8" strokeLinecap="round" />
+            <path d="M 36 23 Q 38 25.5 40 23" fill="none" stroke="#1a0a00" strokeWidth="0.9" strokeLinecap="round" />
 
-            {/* ── Raised paw (for lick animation) ── */}
+            {/* ── Raised paw (lick animation) ── */}
             <rect
               ref={pawRaisedRef}
-              x="11" y="30" width="5" height="7" rx="2.5"
-              fill="#a855f7"
+              x="10" y="30" width="5" height="8" rx="2.5"
+              fill="#D98B3C"
+              stroke="#1a0a00" strokeWidth="0.8"
               opacity="0"
-              style={{ transformOrigin: "13px 37px" }}
+              style={{ transformOrigin: "12px 38px" }}
             />
 
-            {/* ── Z z (sleep indicator) ── */}
+            {/* ── Z z (sleep) ── */}
             <text
               ref={zzRef}
-              x="48" y="8"
+              x="49" y="8"
               fontFamily="var(--font-mono)"
               fontSize="7"
-              fill="#a855f7"
+              fill="#EFB060"
               opacity="0"
               style={{ pointerEvents: "none" }}
             >
