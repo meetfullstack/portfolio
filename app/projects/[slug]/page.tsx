@@ -39,32 +39,42 @@ export default function ProjectPage() {
       gsap.from(".ph-role",     { opacity: 0, y: 16, duration: 0.5, ease: "power3.out", delay: 0.45 });
       gsap.from(".ph-subtitle", { opacity: 0, y: 14, duration: 0.5, ease: "power3.out", delay: 0.5 });
 
-      // Photo reveal — same as hero, triggered on scroll
+      // Apply initial hidden state immediately so the image is never visible unblurred
+      const frame = document.querySelector(".ph-image") as HTMLElement;
+      const h = frame ? frame.offsetHeight : 400;
+      gsap.set(".pi-reveal", { clipPath: `inset(${h}px 0px 0px 0px)`, filter: "blur(10px)" });
+      gsap.set(".pi-blur",   { clipPath: "inset(0px 0px 0px 0px)" });
+      gsap.set(".pi-trail",  { y: h });
+
+      // Refresh ScrollTrigger after scroll-to-top so positions are correct
+      ScrollTrigger.refresh();
+
+      // Photo reveal — triggered on scroll
       ScrollTrigger.create({
         trigger: ".ph-image",
         start: "top 85%",
         once: true,
         onEnter: () => {
-          const frame = document.querySelector(".ph-image") as HTMLElement;
-          const h = frame ? frame.offsetHeight : 400;
+          const currentFrame = document.querySelector(".ph-image") as HTMLElement;
+          const currentH = currentFrame ? currentFrame.offsetHeight : h;
           const D = 2.5;
 
           const tl = gsap.timeline();
 
           // Clip-path reveal from bottom
           tl.fromTo(".pi-reveal",
-            { clipPath: `inset(${h}px 0px 0px 0px)`, filter: "blur(10px)" },
+            { clipPath: `inset(${currentH}px 0px 0px 0px)`, filter: "blur(10px)" },
             { clipPath: "inset(0px 0px 0px 0px)", filter: "blur(0px)", duration: D, ease: "circ.inOut" });
 
           // Trail sweeps bottom → top
-          gsap.set(".pi-trail", { y: h });
+          gsap.set(".pi-trail", { y: currentH });
           tl.to(".pi-trail", { y: -30, duration: D, ease: "circ.inOut",
             onComplete: () => gsap.set(".pi-trail", { display: "none" }) }, 0);
 
           // Blurred overlay clips away upward
           tl.fromTo(".pi-blur",
             { clipPath: "inset(0px 0px 0px 0px)" },
-            { clipPath: `inset(0px 0px ${h}px 0px)`, duration: D, ease: "circ.inOut" }, 0);
+            { clipPath: `inset(0px 0px ${currentH}px 0px)`, duration: D, ease: "circ.inOut" }, 0);
 
           // Shake + hue-rotate at 85%
           const shakeAt = D * 0.85;
