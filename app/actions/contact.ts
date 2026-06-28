@@ -37,7 +37,7 @@ export async function sendContactEmail(
 
   try {
     await resend.emails.send({
-      from: "onboarding@resend.dev",
+      from: process.env.RESEND_FROM_EMAIL ?? "onboarding@resend.dev",
       to: "meetupadhyay158@gmail.com",
       subject: `Portfolio contact from ${name}`,
       text: `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,

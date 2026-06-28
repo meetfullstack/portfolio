@@ -265,7 +265,7 @@ export default function Projects() {
           gap: "1.5rem",
         }}>
           {projects.map((project) => (
-            <ProjectCard key={project.title} project={project} />
+            <ProjectCard key={project.slug} project={project} />
           ))}
         </div>
       </div>

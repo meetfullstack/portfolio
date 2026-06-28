@@ -23,7 +23,9 @@ export default function Home() {
     // fromTo makes start+end explicit so gsap.set pre-hiding doesn't break the tween
     function animateHero() {
       const frame = document.querySelector(".hero-photo-frame") as HTMLElement;
-      const h = frame ? frame.offsetHeight : 450;
+      // Use naturalHeight fallback if image hasn't painted yet
+      const img = frame?.querySelector("img") as HTMLImageElement | null;
+      const h = (frame && frame.offsetHeight > 0) ? frame.offsetHeight : (img?.naturalHeight || 450);
       const D = 2.5; // codedgar default duration
 
       const from = { opacity: 0, y: 20 };

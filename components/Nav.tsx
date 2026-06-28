@@ -6,9 +6,9 @@ import gsap from "gsap";
 import Link from "next/link";
 
 const links = [
-  { href: "#about", label: "About" },
-  { href: "#projects", label: "Projects" },
-  { href: "#contact", label: "Contact" },
+  { href: "/#about", label: "About" },
+  { href: "/#projects", label: "Projects" },
+  { href: "/#contact", label: "Contact" },
 ];
 
 const bubbleGlass = {
@@ -76,10 +76,11 @@ export default function Nav() {
 
   function handleHashClick(e: React.MouseEvent<HTMLAnchorElement>) {
     const href = e.currentTarget.getAttribute("href") ?? "";
-    if (href.startsWith("#")) {
+    // href is "/#section" — extract the hash and smooth-scroll only if on home page
+    const hash = href.startsWith("/#") ? href.slice(1) : href;
+    const target = document.querySelector(hash);
+    if (target) {
       e.preventDefault();
-      const target = document.querySelector(href);
-      if (!target) return;
       const lenis = (window as Window & { __lenis?: { scrollTo: (el: Element, opts?: object) => void } }).__lenis;
       if (lenis) {
         lenis.scrollTo(target, { offset: -80 });
@@ -87,6 +88,7 @@ export default function Nav() {
         target.scrollIntoView({ behavior: "smooth" });
       }
     }
+    // No target on this page — let browser navigate to /#section normally
   }
 
   function handleMouseEnter(e: React.MouseEvent<HTMLAnchorElement>) {
@@ -123,7 +125,7 @@ export default function Nav() {
           href="/"
           onMouseEnter={handleLogoEnter}
           onMouseLeave={handleLogoLeave}
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          onClick={() => { if (window.location.pathname === "/") window.scrollTo({ top: 0, behavior: "smooth" }); }}
           style={{
             display: "inline-flex",
             alignItems: "center",

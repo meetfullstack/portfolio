@@ -24,7 +24,9 @@ export default function LoadingScreen() {
   useEffect(() => {
     if (!show) return;
 
+    // Lock scroll as soon as we know the loader will show
     document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
 
     const tl = gsap.timeline({
       onComplete: () => {
@@ -34,6 +36,7 @@ export default function LoadingScreen() {
           ease: "power4.inOut",
           onComplete: () => {
             document.body.style.overflow = "";
+            document.documentElement.style.overflow = "";
             (window as Window & { __loaderDone?: boolean }).__loaderDone = true;
             window.dispatchEvent(new CustomEvent("portfolio:loader-done"));
             setShow(false);

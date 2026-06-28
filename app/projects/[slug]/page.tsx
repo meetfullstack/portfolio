@@ -76,6 +76,8 @@ export default function ProjectPage() {
       const img = document.querySelector(".pi-reveal img") as HTMLImageElement;
       if (img && !img.complete) {
         img.addEventListener("load", runImageReveal, { once: true });
+        // Cleanup stored on ctx so it runs on unmount
+        return () => img.removeEventListener("load", runImageReveal);
       } else {
         runImageReveal();
       }
