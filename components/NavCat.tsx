@@ -234,9 +234,9 @@ export default function NavCat() {
   const stateRef     = useRef<State>("walk");
   const frameRef     = useRef(0);
   const gsapRef      = useRef<gsap.core.Tween | null>(null);
-  const idleTimer    = useRef<ReturnType<typeof setTimeout>>();
-  const bubbleTimer  = useRef<ReturnType<typeof setTimeout>>();
-  const msgTimer     = useRef<ReturnType<typeof setTimeout>>();
+  const idleTimer    = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const bubbleTimer  = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const msgTimer     = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const rafRef       = useRef<number>(0);
   const lastScrollY  = useRef(0);
   const pokeQueue    = useRef(false);
@@ -260,7 +260,7 @@ export default function NavCat() {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
     if (!ctx) return;
 
     let lastTime = 0;
@@ -440,8 +440,6 @@ export default function NavCat() {
     const wrap = wrapRef.current as HTMLDivElement & { __catSprint?: (x: number, cb?: () => void) => void; __catWalk?: () => void };
     const sprint = wrap?.__catSprint;
     const walk   = wrap?.__catWalk;
-    const prev = stateRef.current;
-
     gsapRef.current?.kill();
     stateRef.current = "poke";
     say(POKE_MSGS[Math.floor(Math.random() * POKE_MSGS.length)], 2000);
@@ -475,7 +473,7 @@ export default function NavCat() {
       {/* Cat container */}
       <div
         ref={containerRef}
-        style={{ position: "absolute", bottom: 0, left: xRef.current, width: CW_PX, pointerEvents: "all", cursor: "pointer", userSelect: "none" }}
+        style={{ position: "absolute", bottom: 0, left: 0, width: CW_PX, pointerEvents: "all", cursor: "pointer", userSelect: "none" }}
         onClick={handlePoke}
         onMouseEnter={() => setTip(true)}
         onMouseLeave={() => setTip(false)}
