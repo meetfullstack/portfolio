@@ -6,7 +6,7 @@ import { useMachine } from "@xstate/react";
 import gsap from "gsap";
 
 // ── dimensions ────────────────────────────────────────────────────
-const CW     = 54;
+const CW     = 64;
 const CH     = 44;
 const MARGIN = 12;
 
@@ -600,91 +600,137 @@ export default function NavCatSVG() {
           </div>
         )}
 
-        {/* SVG cat — orange tabby */}
-        <svg width={CW} height={CH} viewBox={`0 0 ${CW} ${CH}`}
+        {/* SVG cat — orange tabby, realistic proportions */}
+        <svg width={CW} height={CH} viewBox="0 0 64 44"
           style={{ display: "block", overflow: "visible" }}>
           <defs>
             <filter id="svg-cat-drop" x="-20%" y="-20%" width="140%" height="140%">
               <feDropShadow dx="0" dy="1" stdDeviation="1"
-                floodColor="#A86018" floodOpacity="0.35" />
+                floodColor="#A86018" floodOpacity="0.3" />
             </filter>
           </defs>
 
           <g ref={catGroupRef} style={{ transformOrigin: `${CW / 2}px ${CH}px` }}>
 
-            {/* Tail */}
-            <path d="M 10 34 C 4 30, 2 24, 6 20 C 8 18, 10 20, 8 22"
-              fill="none" stroke="#1a0a00" strokeWidth="6" strokeLinecap="round"
-              style={{ transformOrigin: "10px 34px" }} />
+            {/* Tail — long, tapered, S-curve like a real cat */}
+            <path d="M 10 36 C 2 33, -2 24, 4 16 C 7 12, 12 13, 11 17"
+              fill="none" stroke="#1a0a00" strokeWidth="7" strokeLinecap="round"
+              style={{ transformOrigin: "10px 36px" }} />
             <path ref={tailRef}
-              d="M 10 34 C 4 30, 2 24, 6 20 C 8 18, 10 20, 8 22"
-              fill="none" stroke="#D98B3C" strokeWidth="4" strokeLinecap="round"
-              style={{ transformOrigin: "10px 34px" }} />
+              d="M 10 36 C 2 33, -2 24, 4 16 C 7 12, 12 13, 11 17"
+              fill="none" stroke="#D98B3C" strokeWidth="5" strokeLinecap="round"
+              style={{ transformOrigin: "10px 36px" }} />
+            <path d="M 10 36 C 2 33, -2 24, 4 16 C 7 12, 12 13, 11 17"
+              fill="none" stroke="#A86018" strokeWidth="1.2" strokeLinecap="round"
+              strokeDasharray="3 3" opacity="0.6" style={{ transformOrigin: "10px 36px" }} />
 
-            {/* Body */}
-            <ellipse cx="24" cy="32" rx="16" ry="10" fill="#1a0a00" />
-            <ellipse ref={bodyRef} cx="24" cy="32" rx="15" ry="9"
+            {/* Body — low, elongated oval tapering toward the haunches */}
+            <path d="M 14 38
+                     C 10 38, 8 33, 9 28
+                     C 10 22, 16 18, 26 18
+                     C 38 18, 46 22, 47 30
+                     C 47.5 35, 44 39, 38 39
+                     C 30 40, 20 40, 14 38 Z"
+              fill="#1a0a00" />
+            <path ref={bodyRef}
+              d="M 15 37
+                 C 11.5 37, 9.5 32.5, 10.5 28
+                 C 11.5 22.5, 17 19, 26 19
+                 C 37 19, 44.5 22.5, 45.5 29.5
+                 C 46 34, 43 37.5, 37.5 38
+                 C 30 38.8, 20.5 38.8, 15 37 Z"
               fill="#D98B3C" filter="url(#svg-cat-drop)" />
-            <line x1="15" y1="27" x2="14" y2="37"
-              stroke="#A86018" strokeWidth="1.5" strokeLinecap="round" />
-            <line x1="34" y1="27" x2="35" y2="37"
-              stroke="#A86018" strokeWidth="1.5" strokeLinecap="round" />
-            <ellipse cx="24" cy="33" rx="8" ry="6" fill="#F5E6CC" />
+            {/* Tabby stripes along the back/flank */}
+            <path d="M 18 21 Q 20 24 18 28" fill="none" stroke="#A86018" strokeWidth="1.3" strokeLinecap="round" opacity="0.7" />
+            <path d="M 24 19.5 Q 26 23 24 27.5" fill="none" stroke="#A86018" strokeWidth="1.3" strokeLinecap="round" opacity="0.7" />
+            <path d="M 32 20 Q 34.5 24 32.5 29" fill="none" stroke="#A86018" strokeWidth="1.3" strokeLinecap="round" opacity="0.7" />
+            <path d="M 39 21.5 Q 41.5 25 40 30" fill="none" stroke="#A86018" strokeWidth="1.3" strokeLinecap="round" opacity="0.6" />
+            {/* Cream belly */}
+            <path d="M 16 34 C 16 30, 20 28, 26 28 C 33 28, 38 30, 39 34 C 39.5 37, 35 39, 27 39 C 20 39, 16 37, 16 34 Z"
+              fill="#F5E6CC" />
 
-            {/* Legs */}
-            <rect ref={legFLRef} x="11" y="37" width="5" height="8" rx="2.5" fill="#1a0a00" />
-            <rect x="11.5" y="37" width="4" height="7" rx="2" fill="#D98B3C" />
-            <ellipse cx="13.5" cy="44.5" rx="2.2" ry="1.2" fill="#F5E6CC" />
+            {/* Legs — slim, tapered, slightly forward-leaning */}
+            <rect ref={legFLRef} x="13" y="34" width="4.5" height="10" rx="2.2" fill="#1a0a00" />
+            <rect x="13.4" y="34" width="3.7" height="9" rx="1.8" fill="#D98B3C" />
+            <ellipse cx="15.2" cy="43.3" rx="2" ry="1.1" fill="#F5E6CC" />
 
-            <rect ref={legFRRef} x="18" y="37" width="5" height="8" rx="2.5" fill="#1a0a00" />
-            <rect x="18.5" y="37" width="4" height="7" rx="2" fill="#D98B3C" />
-            <ellipse cx="20.5" cy="44.5" rx="2.2" ry="1.2" fill="#F5E6CC" />
+            <rect ref={legFRRef} x="19.5" y="35" width="4.2" height="9" rx="2.1" fill="#1a0a00" />
+            <rect x="19.9" y="35" width="3.4" height="8" rx="1.7" fill="#D98B3C" />
+            <ellipse cx="21.6" cy="43.3" rx="1.8" ry="1" fill="#F5E6CC" />
 
-            <rect ref={legBLRef} x="26" y="37" width="5" height="8" rx="2.5" fill="#1a0a00" />
-            <rect x="26.5" y="37" width="4" height="7" rx="2" fill="#D98B3C" />
-            <ellipse cx="28.5" cy="44.5" rx="2.2" ry="1.2" fill="#F5E6CC" />
+            <rect ref={legBLRef} x="34" y="33" width="4.8" height="11" rx="2.3" fill="#1a0a00" />
+            <rect x="34.4" y="33" width="4" height="10" rx="1.9" fill="#D98B3C" />
+            <ellipse cx="36.4" cy="43.3" rx="2.1" ry="1.1" fill="#F5E6CC" />
 
-            <rect ref={legBRRef} x="33" y="37" width="5" height="8" rx="2.5" fill="#1a0a00" />
-            <rect x="33.5" y="37" width="4" height="7" rx="2" fill="#D98B3C" />
-            <ellipse cx="35.5" cy="44.5" rx="2.2" ry="1.2" fill="#F5E6CC" />
+            <rect ref={legBRRef} x="40" y="34" width="4.5" height="10" rx="2.2" fill="#1a0a00" />
+            <rect x="40.4" y="34" width="3.7" height="9" rx="1.8" fill="#D98B3C" />
+            <ellipse cx="42.2" cy="43.3" rx="2" ry="1.1" fill="#F5E6CC" />
 
-            {/* Head */}
-            <circle cx="38" cy="18" r="13" fill="#1a0a00" />
-            <circle ref={headRef} cx="38" cy="18" r="12" fill="#D98B3C" />
-            <ellipse cx="38" cy="12" rx="7" ry="4" fill="#EFB060" opacity="0.6" />
-            <ellipse cx="38" cy="20" rx="7" ry="8" fill="#F5E6CC" />
-            <line x1="28" y1="15" x2="27" y2="19"
-              stroke="#A86018" strokeWidth="1.2" strokeLinecap="round" />
-            <line x1="29" y1="13" x2="28.5" y2="17"
-              stroke="#A86018" strokeWidth="1.2" strokeLinecap="round" />
+            {/* Head — smaller than body, slightly wider than tall, rounded muzzle */}
+            <path d="M 38 4
+                     C 47 4, 53 10, 53 17
+                     C 53 24, 47 28.5, 39 28.5
+                     C 31 28.5, 26 24, 26 17
+                     C 26 10, 31 4, 38 4 Z"
+              fill="#1a0a00" />
+            <path ref={headRef}
+              d="M 38.3 5
+                 C 46.5 5, 52 10.7, 52 17
+                 C 52 23.3, 46.5 27.5, 39 27.5
+                 C 31.5 27.5, 27 23.3, 27 17
+                 C 27 10.7, 31.8 5, 38.3 5 Z"
+              fill="#D98B3C" />
+            {/* Top-of-head highlight */}
+            <ellipse cx="39" cy="11" rx="8" ry="4.5" fill="#EFB060" opacity="0.55" />
+            {/* Cream muzzle/face patch — narrower, lower on face like a real cat */}
+            <path d="M 39 14
+                     C 44 14, 47 18, 46.5 22
+                     C 46 26, 42 28.5, 38.5 28.5
+                     C 35 28.5, 31.5 26.5, 31 22.5
+                     C 30.5 18.5, 34 14, 39 14 Z"
+              fill="#F5E6CC" />
+            {/* Cheek stripe marks */}
+            <path d="M 28.5 13 Q 27 16 28 19" fill="none" stroke="#A86018" strokeWidth="1.1" strokeLinecap="round" opacity="0.65" />
+            <path d="M 30 11 Q 28.5 14.5 29.5 18" fill="none" stroke="#A86018" strokeWidth="1.1" strokeLinecap="round" opacity="0.5" />
+            {/* Forehead "M" tabby mark */}
+            <path d="M 35 7 L 38 11 L 41 7" fill="none" stroke="#A86018" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" opacity="0.6" />
 
-            {/* Ears */}
-            <polygon points="28,8 32,17 26,17" fill="#1a0a00" />
-            <polygon points="29,10 31,16 27,16" fill="#D98B3C" />
-            <polygon points="29.5,11 31,15.5 27.5,15.5" fill="#F4A0A0" />
-            <polygon points="46,8 42,17 48,17" fill="#1a0a00" />
-            <polygon points="45,10 43,16 47,16" fill="#D98B3C" />
-            <polygon points="44.5,11 43,15.5 46.5,15.5" fill="#F4A0A0" />
+            {/* Ears — taller, pointed triangles tilted slightly outward */}
+            <path d="M 29 3 L 34 13 L 25 12 Z" fill="#1a0a00" />
+            <path d="M 29.5 5.5 L 33 12.3 L 26.8 11.5 Z" fill="#D98B3C" />
+            <path d="M 30 7.5 L 32.3 12 L 27.8 11.4 Z" fill="#F4A0A0" />
 
-            {/* Eyes */}
-            <ellipse ref={eyeLRef} cx="33" cy="17" rx="3.5" ry="3.5" fill="#1a0a00" />
-            <circle cx="34.3" cy="15.5" r="1.3" fill="#FFFFFF" />
-            <ellipse ref={eyeRRef} cx="43" cy="17" rx="3.5" ry="3.5" fill="#1a0a00" />
-            <circle cx="44.3" cy="15.5" r="1.3" fill="#FFFFFF" />
+            <path d="M 48 3 L 52 12 L 43 13 Z" fill="#1a0a00" />
+            <path d="M 47.5 5.5 L 50.2 11.5 L 44 12.3 Z" fill="#D98B3C" />
+            <path d="M 47 7.5 L 49.2 11.4 L 44.7 12 Z" fill="#F4A0A0" />
 
-            {/* Nose + mouth */}
-            <ellipse cx="38" cy="22" rx="1.8" ry="1.2" fill="#F4A0A0" />
-            <path d="M 36 23 Q 38 25.5 40 23"
-              fill="none" stroke="#1a0a00" strokeWidth="0.9" strokeLinecap="round" />
+            {/* Eyes — almond-shaped, angled upward slightly for a feline look */}
+            <ellipse ref={eyeLRef} cx="34.5" cy="17" rx="3" ry="2.6"
+              fill="#1a0a00" transform="rotate(-8 34.5 17)" />
+            <circle cx="35.5" cy="15.7" r="1.1" fill="#FFFFFF" />
+            <ellipse ref={eyeRRef} cx="43.5" cy="17" rx="3" ry="2.6"
+              fill="#1a0a00" transform="rotate(8 43.5 17)" />
+            <circle cx="44.5" cy="15.7" r="1.1" fill="#FFFFFF" />
+
+            {/* Nose — small triangle/heart shape */}
+            <path d="M 37.3 21.3 L 39 21.3 L 38.15 22.7 Z" fill="#F4A0A0" />
+            {/* Mouth — proper feline w-shape under nose */}
+            <path d="M 38.15 22.7 L 38.15 23.6 M 38.15 23.6 Q 36.3 23.6 35.5 22.4 M 38.15 23.6 Q 40 23.6 40.8 22.4"
+              fill="none" stroke="#1a0a00" strokeWidth="0.7" strokeLinecap="round" />
+            {/* Whiskers */}
+            <line x1="29" y1="20" x2="22" y2="19" stroke="#1a0a00" strokeWidth="0.5" opacity="0.45" strokeLinecap="round" />
+            <line x1="29" y1="22" x2="22" y2="22.5" stroke="#1a0a00" strokeWidth="0.5" opacity="0.45" strokeLinecap="round" />
+            <line x1="49" y1="20" x2="56" y2="19" stroke="#1a0a00" strokeWidth="0.5" opacity="0.45" strokeLinecap="round" />
+            <line x1="49" y1="22" x2="56" y2="22.5" stroke="#1a0a00" strokeWidth="0.5" opacity="0.45" strokeLinecap="round" />
 
             {/* Raised paw (lick) */}
             <rect ref={pawRaisedRef}
-              x="10" y="30" width="5" height="8" rx="2.5"
+              x="11" y="29" width="4.5" height="10" rx="2.2"
               fill="#D98B3C" stroke="#1a0a00" strokeWidth="0.8"
-              opacity="0" style={{ transformOrigin: "12px 38px" }} />
+              opacity="0" style={{ transformOrigin: "13px 39px" }} />
 
             {/* Z z (sleep) */}
-            <text ref={zzRef} x="49" y="8"
+            <text ref={zzRef} x="55" y="6"
               fontFamily="var(--font-mono)" fontSize="7"
               fill="#EFB060" opacity="0" style={{ pointerEvents: "none" }}>
               z z
