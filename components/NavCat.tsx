@@ -76,9 +76,9 @@ function drawWalk(ctx: Ctx, frame: number, dir: 1 | -1) {
 
   drawShadow(ctx);
 
-  // Tail — connected hook curling up from the rear of the body
-  fill(ctx, 1, 3, 1, 3, C.BK); fill(ctx, 1, 4, 1, 1, C.OR);
-  fill(ctx, 0, 1, 2, 2, C.BK); fill(ctx, 0, 1, 1, 1, C.OR);
+  // Tail — thin upright shaft with a small curl-back cap at the tip
+  fill(ctx, 1, 2, 1, 3, C.BK); fill(ctx, 1, 3, 1, 2, C.OR);
+  fill(ctx, 0, 1, 2, 1, C.BK); fill(ctx, 1, 1, 1, 1, C.OR);
 
   drawTorso(ctx);
   drawHead(ctx);
@@ -126,9 +126,9 @@ function drawSit(ctx: Ctx) {
 
   fill(ctx, 3, 11, 9, 1, C.SH);
 
-  // Tail curls around to the front
-  fill(ctx, 0, 5, 1, 3, C.BK); fill(ctx, 0, 6, 1, 1, C.OR);
-  fill(ctx, 0, 7, 3, 1, C.BK); fill(ctx, 1, 7, 1, 1, C.OR);
+  // Tail drops from the rear and curls forward along the ground
+  fill(ctx, 0, 7, 1, 3, C.BK); fill(ctx, 0, 8, 1, 1, C.OR);
+  fill(ctx, 0, 9, 3, 1, C.BK); fill(ctx, 1, 9, 1, 1, C.OR);
 
   // Taller, puffier sitting torso
   fill(ctx, 2, 4, 9, 5, C.BK);
@@ -187,8 +187,8 @@ function drawBump(ctx: Ctx, dir: 1 | -1) {
   if (dir === -1) { ctx.save(); ctx.translate(CW_PX, 0); ctx.scale(-1, 1); }
 
   drawShadow(ctx);
-  fill(ctx, 1, 3, 1, 3, C.BK); fill(ctx, 1, 4, 1, 1, C.OR);
-  fill(ctx, 0, 2, 2, 2, C.BK); fill(ctx, 0, 3, 1, 1, C.OR);
+  fill(ctx, 1, 2, 1, 3, C.BK); fill(ctx, 1, 3, 1, 2, C.OR);
+  fill(ctx, 0, 1, 2, 1, C.BK); fill(ctx, 1, 1, 1, 1, C.OR);
   drawTorso(ctx);
   drawHead(ctx);
   fill(ctx, 3, 9, 1, 2, C.BK); fill(ctx, 3, 9, 1, 1, C.OR);
@@ -209,7 +209,7 @@ function drawPoke(ctx: Ctx, dir: 1 | -1) {
   if (dir === -1) { ctx.translate(CW_PX, 0); ctx.scale(-1, 1); }
 
   drawShadow(ctx);
-  fill(ctx, 1, 3, 1, 3, C.BK); fill(ctx, 1, 4, 1, 1, C.OR);
+  fill(ctx, 1, 2, 1, 3, C.BK); fill(ctx, 1, 3, 1, 2, C.OR);
   drawTorso(ctx);
   drawHead(ctx);
   // Legs tucked
@@ -232,7 +232,7 @@ function drawHold(ctx: Ctx, frame: number) {
   ctx.translate(-CW_PX / 2, -CH_PX / 2);
 
   drawShadow(ctx);
-  fill(ctx, 1, 3, 1, 3, C.BK); fill(ctx, 1, 4, 1, 1, C.OR);
+  fill(ctx, 1, 2, 1, 3, C.BK); fill(ctx, 1, 3, 1, 2, C.OR);
   drawTorso(ctx);
   drawHead(ctx);
   fill(ctx, 2, 9, 1, 2, C.BK); fill(ctx, 2, 9, 1, 1, C.OR);
