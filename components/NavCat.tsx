@@ -3,241 +3,96 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import gsap from "gsap";
 
-// ── pixel grid — small, chunky, itch.io-style mascot sprite ────────
-const P     = 4;    // CSS px per "pixel" — bigger chunks, fewer pixels
-const CW    = 16;   // cat width  in pixels
-const CH    = 13;   // cat height in pixels
-const CW_PX = CW * P;
-const CH_PX = CH * P;
+// ── sprite sheet — recolored from PixelCat (MIT, by Pistachios) ────
+// See /CREDITS.md for license text + attribution.
+const SHEET_SRC  = "/glitch-sprite.png";
+const CELL       = 32;   // source cell size in the sprite sheet
+const SCALE      = 2;    // output scale
+const CW_PX      = CELL * SCALE;
+const CH_PX      = CELL * SCALE;
 
 const WALK_SPD   = 45;
 const SPRINT_SPD = 160;
 const MARGIN     = 12;
 
-// ── orange tabby palette — matches the itch.io reference sprite ───
-const C = {
-  BK: "#2a1505",  // dark brown outline (not pure black)
-  OR: "#E0954B",  // warm orange body
-  LO: "#EFB878",  // light orange highlight
-  CR: "#F5E6CC",  // cream chest/belly
-  PK: "#F2A0A8",  // pink nose/mouth
-  DK: "#B06A2C",  // shadow stripe tone
-  SH: "#9A8278",  // ground shadow (muted mauve-grey)
+// Accent color for the "?" / "!!" reaction marks
+const ACCENT = "#EFB878";
+
+// ── frame coordinates (col, row) in the sheet — each cell is 32x32 ──
+const F = {
+  sit:    [0, 0] as [number, number],
+  sitAlt: [0, 1] as [number, number],
+  sniffA: [0, 2] as [number, number],
+  sniffB: [3, 2] as [number, number],
+  walkA:  [0, 4] as [number, number],
+  walkB:  [4, 4] as [number, number],
+  runA:   [0, 7] as [number, number],
+  runB:   [3, 7] as [number, number],
+  sleepA: [0, 6] as [number, number],
+  sleepB: [2, 6] as [number, number],
+  alert:  [3, 3] as [number, number],
+  pounce: [1, 8] as [number, number],
 };
 
 // ── draw helpers ─────────────────────────────────────────────────
 type Ctx = CanvasRenderingContext2D;
 
-function fill(ctx: Ctx, x: number, y: number, w: number, h: number, c: string) {
-  ctx.fillStyle = c;
-  ctx.fillRect(x * P, y * P, w * P, h * P);
-}
-
-// ── head — small bump on top of the torso (right side, facing right) ──
-// Head zone: x=10..14 (5 wide), y=1..5 — single eye dot, side-profile.
-function drawHead(ctx: Ctx) {
-  const { BK, OR, CR, PK } = C;
-
-  // Ears — two tiny triangular nubs
-  fill(ctx, 10, 0, 1, 1, BK);
-  fill(ctx, 13, 0, 1, 1, BK);
-
-  // Head block — smaller than the torso
-  fill(ctx, 10, 1, 5, 5, BK);    // outline
-  fill(ctx, 11, 2, 3, 3, OR);    // orange fill
-
-  // Cream muzzle patch
-  fill(ctx, 12, 3, 2, 2, CR);
-
-  // Single eye dot (side profile — only one eye visible)
-  fill(ctx, 11, 2, 1, 1, BK);
-
-  // Nose
-  fill(ctx, 13, 3, 1, 1, PK);
-}
-
-// ── torso — low, simple rounded block ──────────────────────────────
-function drawTorso(ctx: Ctx) {
-  const { BK, OR, CR } = C;
-  fill(ctx, 2, 5, 9, 4, BK);     // outline
-  fill(ctx, 3, 6, 7, 2, OR);     // orange fill
-  fill(ctx, 4, 7, 5, 1, CR);     // cream belly strip
-}
-
-// ── ground shadow — flat ellipse under the feet ─────────────────────
-function drawShadow(ctx: Ctx) {
-  fill(ctx, 3, 11, 9, 1, C.SH);
-}
-
-// ── walk ──────────────────────────────────────────────────────────
-function drawWalk(ctx: Ctx, frame: number, dir: 1 | -1) {
+function drawCell(ctx: Ctx, img: HTMLImageElement, cell: [number, number], dir: 1 | -1) {
   ctx.clearRect(0, 0, CW_PX, CH_PX);
   if (dir === -1) { ctx.save(); ctx.translate(CW_PX, 0); ctx.scale(-1, 1); }
-
-  drawShadow(ctx);
-
-  // Tail — thin upright shaft with a small curl-back cap at the tip
-  fill(ctx, 1, 2, 1, 3, C.BK); fill(ctx, 1, 3, 1, 2, C.OR);
-  fill(ctx, 0, 1, 2, 1, C.BK); fill(ctx, 1, 1, 1, 1, C.OR);
-
-  drawTorso(ctx);
-  drawHead(ctx);
-
-  // Legs — small stubs, alternate per frame
-  if (frame === 0) {
-    fill(ctx, 3, 9, 1, 2, C.BK); fill(ctx, 3, 9, 1, 1, C.OR);
-    fill(ctx, 8, 9, 1, 2, C.BK); fill(ctx, 8, 9, 1, 1, C.OR);
-  } else {
-    fill(ctx, 4, 9, 1, 2, C.BK); fill(ctx, 4, 9, 1, 1, C.OR);
-    fill(ctx, 7, 9, 1, 2, C.BK); fill(ctx, 7, 9, 1, 1, C.OR);
-  }
-
+  const [col, row] = cell;
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(img, col * CELL, row * CELL, CELL, CELL, 0, 0, CW_PX, CH_PX);
   if (dir === -1) ctx.restore();
 }
 
-// ── sprint ────────────────────────────────────────────────────────
-function drawSprint(ctx: Ctx, frame: number, dir: 1 | -1) {
-  ctx.clearRect(0, 0, CW_PX, CH_PX);
-  if (dir === -1) { ctx.save(); ctx.translate(CW_PX, 0); ctx.scale(-1, 1); }
-
-  drawShadow(ctx);
-
-  // Tail streams flat behind
-  fill(ctx, 0, 5, 2, 1, C.BK); fill(ctx, 0, 6, 1, 1, C.OR);
-
-  drawTorso(ctx);
-  drawHead(ctx);
-
-  // Gallop — legs stretched further apart
-  if (frame === 0) {
-    fill(ctx, 2, 9, 1, 2, C.BK); fill(ctx, 2, 9, 1, 1, C.OR);
-    fill(ctx, 9, 9, 1, 2, C.BK); fill(ctx, 9, 9, 1, 1, C.OR);
-  } else {
-    fill(ctx, 5, 9, 1, 2, C.BK); fill(ctx, 5, 9, 1, 1, C.OR);
-    fill(ctx, 6, 9, 1, 2, C.BK); fill(ctx, 6, 9, 1, 1, C.OR);
-  }
-
-  if (dir === -1) ctx.restore();
+function drawMark(ctx: Ctx, glyph: "?" | "!!") {
+  ctx.fillStyle = ACCENT;
+  ctx.font = "bold 14px monospace";
+  ctx.textAlign = "center";
+  ctx.fillText(glyph, CW_PX * 0.78, 12);
 }
 
-// ── idle sit ──────────────────────────────────────────────────────
-function drawSit(ctx: Ctx) {
-  ctx.clearRect(0, 0, CW_PX, CH_PX);
-
-  fill(ctx, 3, 11, 9, 1, C.SH);
-
-  // Tail drops from the rear and curls forward along the ground
-  fill(ctx, 0, 7, 1, 3, C.BK); fill(ctx, 0, 8, 1, 1, C.OR);
-  fill(ctx, 0, 9, 3, 1, C.BK); fill(ctx, 1, 9, 1, 1, C.OR);
-
-  // Taller, puffier sitting torso
-  fill(ctx, 2, 4, 9, 5, C.BK);
-  fill(ctx, 3, 5, 7, 3, C.OR);
-  fill(ctx, 4, 6, 5, 1, C.CR);
-
-  // Front paws together
-  fill(ctx, 3, 9, 2, 1, C.BK); fill(ctx, 3, 9, 2, 1, C.OR);
-  fill(ctx, 7, 9, 2, 1, C.BK); fill(ctx, 7, 9, 2, 1, C.OR);
-
-  drawHead(ctx);
+function drawWalk(ctx: Ctx, img: HTMLImageElement, frame: number, dir: 1 | -1) {
+  drawCell(ctx, img, frame === 0 ? F.walkA : F.walkB, dir);
 }
 
-// ── idle sleep ────────────────────────────────────────────────────
-function drawSleep(ctx: Ctx) {
-  ctx.clearRect(0, 0, CW_PX, CH_PX);
-
-  fill(ctx, 2, 11, 10, 1, C.SH);
-
-  // Curled low blob
-  fill(ctx, 2, 6, 11, 5, C.BK);
-  fill(ctx, 3, 7, 9, 3, C.OR);
-  fill(ctx, 4, 8, 6, 2, C.CR);
-
-  // Curled tail tip tucked beside the body
-  fill(ctx, 0, 7, 2, 2, C.BK); fill(ctx, 1, 8, 1, 1, C.OR);
-
-  // Tiny ear bumps
-  fill(ctx, 5, 6, 1, 1, C.BK);
-  fill(ctx, 8, 6, 1, 1, C.BK);
-
-  // Closed eye (dash)
-  fill(ctx, 6, 8, 2, 1, C.BK);
-
-  // Sleeping nose
-  fill(ctx, 9, 8, 1, 1, C.PK);
-
-  // Z z
-  fill(ctx, 12, 3, 1, 1, C.OR);
-  fill(ctx, 13, 2, 1, 1, C.LO);
+function drawSprint(ctx: Ctx, img: HTMLImageElement, frame: number, dir: 1 | -1) {
+  drawCell(ctx, img, frame === 0 ? F.runA : F.runB, dir);
 }
 
-// ── idle lick ────────────────────────────────────────────────────
-function drawLick(ctx: Ctx, frame: number) {
-  drawSit(ctx);
-  if (frame === 0) {
-    fill(ctx, 2, 7, 1, 2, C.BK); fill(ctx, 2, 7, 1, 1, C.OR);
-  } else {
-    fill(ctx, 2, 5, 1, 3, C.BK); fill(ctx, 2, 5, 1, 2, C.OR);
-  }
+function drawSit(ctx: Ctx, img: HTMLImageElement) {
+  drawCell(ctx, img, F.sit, 1);
 }
 
-// ── bump (hits wall) ─────────────────────────────────────────────
-function drawBump(ctx: Ctx, dir: 1 | -1) {
-  ctx.clearRect(0, 0, CW_PX, CH_PX);
-  if (dir === -1) { ctx.save(); ctx.translate(CW_PX, 0); ctx.scale(-1, 1); }
-
-  drawShadow(ctx);
-  fill(ctx, 1, 2, 1, 3, C.BK); fill(ctx, 1, 3, 1, 2, C.OR);
-  fill(ctx, 0, 1, 2, 1, C.BK); fill(ctx, 1, 1, 1, 1, C.OR);
-  drawTorso(ctx);
-  drawHead(ctx);
-  fill(ctx, 3, 9, 1, 2, C.BK); fill(ctx, 3, 9, 1, 1, C.OR);
-  fill(ctx, 8, 9, 1, 2, C.BK); fill(ctx, 8, 9, 1, 1, C.OR);
-
-  // ? mark above head
-  fill(ctx, 13, 0, 1, 1, C.LO);
-  fill(ctx, 14, 0, 1, 1, C.LO);
-
-  if (dir === -1) ctx.restore();
+function drawSleep(ctx: Ctx, img: HTMLImageElement, frame: number) {
+  drawCell(ctx, img, frame === 0 ? F.sleepA : F.sleepB, 1);
 }
 
-// ── poke (jump up) ────────────────────────────────────────────────
-function drawPoke(ctx: Ctx, dir: 1 | -1) {
-  ctx.clearRect(0, 0, CW_PX, CH_PX);
+function drawLick(ctx: Ctx, img: HTMLImageElement, frame: number) {
+  drawCell(ctx, img, frame === 0 ? F.sniffA : F.sniffB, 1);
+}
+
+function drawBump(ctx: Ctx, img: HTMLImageElement, dir: 1 | -1) {
+  drawCell(ctx, img, F.alert, dir);
+  drawMark(ctx, "?");
+}
+
+function drawPoke(ctx: Ctx, img: HTMLImageElement, dir: 1 | -1) {
   ctx.save();
-  ctx.translate(0, -P * 2);
-  if (dir === -1) { ctx.translate(CW_PX, 0); ctx.scale(-1, 1); }
-
-  drawShadow(ctx);
-  fill(ctx, 1, 2, 1, 3, C.BK); fill(ctx, 1, 3, 1, 2, C.OR);
-  drawTorso(ctx);
-  drawHead(ctx);
-  // Legs tucked
-  fill(ctx, 4, 9, 1, 1, C.BK); fill(ctx, 4, 9, 1, 1, C.OR);
-  fill(ctx, 7, 9, 1, 1, C.BK); fill(ctx, 7, 9, 1, 1, C.OR);
-  // !! above
-  fill(ctx, 10, 0, 1, 2, C.LO);
-  fill(ctx, 12, 0, 1, 2, C.LO);
-
+  ctx.translate(0, -SCALE * 4);
+  drawCell(ctx, img, F.pounce, dir);
+  drawMark(ctx, "!!");
   ctx.restore();
 }
 
-// ── hold (scroll wobble) ──────────────────────────────────────────
-function drawHold(ctx: Ctx, frame: number) {
-  ctx.clearRect(0, 0, CW_PX, CH_PX);
+function drawHold(ctx: Ctx, img: HTMLImageElement, frame: number) {
   const angle = frame === 0 ? -0.12 : 0.12;
   ctx.save();
   ctx.translate(CW_PX / 2, CH_PX / 2);
   ctx.rotate(angle);
   ctx.translate(-CW_PX / 2, -CH_PX / 2);
-
-  drawShadow(ctx);
-  fill(ctx, 1, 2, 1, 3, C.BK); fill(ctx, 1, 3, 1, 2, C.OR);
-  drawTorso(ctx);
-  drawHead(ctx);
-  fill(ctx, 2, 9, 1, 2, C.BK); fill(ctx, 2, 9, 1, 1, C.OR);
-  fill(ctx, 9, 9, 1, 2, C.BK); fill(ctx, 9, 9, 1, 1, C.OR);
-
+  drawCell(ctx, img, F.sitAlt, 1);
   ctx.restore();
 }
 
@@ -300,9 +155,17 @@ export default function NavCat() {
     const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
     if (!ctx) return;
 
+    const img = new window.Image();
+    img.src = SHEET_SRC;
+
     let lastTime = 0;
 
     function loop(t: number) {
+      if (!img.complete || img.naturalWidth === 0) {
+        rafRef.current = requestAnimationFrame(loop);
+        return;
+      }
+
       const state    = stateRef.current;
       const dir      = dirRef.current;
       const interval = state === "sprint" ? 90 : state === "idle-sleep" ? 600 : 200;
@@ -313,14 +176,14 @@ export default function NavCat() {
         const f = frameRef.current;
 
         switch (state) {
-          case "walk":       drawWalk(ctx, f, dir);   break;
-          case "sprint":     drawSprint(ctx, f, dir); break;
-          case "idle-sit":   drawSit(ctx);             break;
-          case "idle-sleep": drawSleep(ctx);            break;
-          case "idle-lick":  drawLick(ctx, f);         break;
-          case "bump":       drawBump(ctx, dir);        break;
-          case "poke":       drawPoke(ctx, dir);        break;
-          case "hold":       drawHold(ctx, f);          break;
+          case "walk":       drawWalk(ctx, img, f, dir);   break;
+          case "sprint":     drawSprint(ctx, img, f, dir); break;
+          case "idle-sit":   drawSit(ctx, img);             break;
+          case "idle-sleep": drawSleep(ctx, img, f);         break;
+          case "idle-lick":  drawLick(ctx, img, f);         break;
+          case "bump":       drawBump(ctx, img, dir);        break;
+          case "poke":       drawPoke(ctx, img, dir);        break;
+          case "hold":       drawHold(ctx, img, f);          break;
         }
       }
 

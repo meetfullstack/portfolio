@@ -20,6 +20,19 @@ export default function Footer() {
           <p className="mt-1 text-xs" style={{ color: "var(--text-muted)" }}>
             © {new Date().getFullYear()} Meet Upadhyay
           </p>
+          <p className="mt-3 text-xs" style={{ color: "var(--text-muted)" }}>
+            Navbar cat sprite adapted from{" "}
+            <a
+              href="https://addons.mozilla.org/en-US/firefox/addon/pixelcat/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="transition-colors hover:text-purple-400"
+              style={{ color: "var(--text-secondary)" }}
+            >
+              PixelCat
+            </a>{" "}
+            by Pistachios, MIT License.
+          </p>
         </div>
 
         <div className="flex flex-col gap-2">
