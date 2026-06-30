@@ -3,10 +3,10 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import gsap from "gsap";
 
-// ── pixel grid — wider canvas for realistic proportions ────────────
-const P     = 3;    // CSS px per "pixel"
-const CW    = 22;   // cat width  in pixels
-const CH    = 16;   // cat height in pixels
+// ── pixel grid — small, chunky, itch.io-style mascot sprite ────────
+const P     = 4;    // CSS px per "pixel" — bigger chunks, fewer pixels
+const CW    = 16;   // cat width  in pixels
+const CH    = 13;   // cat height in pixels
 const CW_PX = CW * P;
 const CH_PX = CH * P;
 
@@ -14,15 +14,15 @@ const WALK_SPD   = 45;
 const SPRINT_SPD = 160;
 const MARGIN     = 12;
 
-// ── orange tabby palette ────────────────────────────────────────
+// ── orange tabby palette — matches the itch.io reference sprite ───
 const C = {
-  BK: "#1a0a00",  // thick dark outline
-  OR: "#D98B3C",  // warm orange body
-  LO: "#EFB060",  // light orange (highlight/ears)
-  CR: "#F5E6CC",  // cream face & belly
-  PK: "#F4A0A0",  // pink (inner ear, nose)
-  DK: "#A86018",  // dark stripe / shadow
-  WH: "#FFFFFF",  // eye shine
+  BK: "#2a1505",  // dark brown outline (not pure black)
+  OR: "#E0954B",  // warm orange body
+  LO: "#EFB878",  // light orange highlight
+  CR: "#F5E6CC",  // cream chest/belly
+  PK: "#F2A0A8",  // pink nose/mouth
+  DK: "#B06A2C",  // shadow stripe tone
+  SH: "#9A8278",  // ground shadow (muted mauve-grey)
 };
 
 // ── draw helpers ─────────────────────────────────────────────────
@@ -33,48 +33,40 @@ function fill(ctx: Ctx, x: number, y: number, w: number, h: number, c: string) {
   ctx.fillRect(x * P, y * P, w * P, h * P);
 }
 
-// ── head: smaller than body, drawn at the front (right side) ──────
-// Head zone: x=13..21 (8 wide), y=1..8 (7 tall) — clearly smaller than the body block.
+// ── head — small bump on top of the torso (right side, facing right) ──
+// Head zone: x=10..14 (5 wide), y=1..5 — single eye dot, side-profile.
 function drawHead(ctx: Ctx) {
-  const { BK, OR, LO, CR, PK, DK, WH } = C;
+  const { BK, OR, CR, PK } = C;
 
-  // Ears — pointed, tilted outward
-  fill(ctx, 14, 0, 2, 1, BK);
-  fill(ctx, 14, 1, 1, 1, OR); fill(ctx, 15, 1, 1, 1, BK);
-  fill(ctx, 14, 0, 1, 1, PK);
+  // Ears — two tiny triangular nubs
+  fill(ctx, 10, 0, 1, 1, BK);
+  fill(ctx, 13, 0, 1, 1, BK);
 
-  fill(ctx, 18, 0, 2, 1, BK);
-  fill(ctx, 19, 1, 1, 1, OR); fill(ctx, 18, 1, 1, 1, BK);
-  fill(ctx, 19, 0, 1, 1, PK);
+  // Head block — smaller than the torso
+  fill(ctx, 10, 1, 5, 5, BK);    // outline
+  fill(ctx, 11, 2, 3, 3, OR);    // orange fill
 
-  // Head block — rounder, smaller than torso
-  fill(ctx, 13, 1, 8, 6, BK);     // outline
-  fill(ctx, 14, 2, 6, 4, OR);     // orange fill
-  fill(ctx, 13, 7, 8, 1, BK);     // chin outline row
-  fill(ctx, 14, 7, 6, 1, OR);
+  // Cream muzzle patch
+  fill(ctx, 12, 3, 2, 2, CR);
 
-  // Cream muzzle patch — lower/narrower like a real face
-  fill(ctx, 15, 3, 4, 4, CR);
-  fill(ctx, 14, 2, 6, 1, OR);     // forehead band stays orange
-
-  // Cheek stripe marks
-  fill(ctx, 14, 3, 1, 2, DK);
-  fill(ctx, 19, 3, 1, 2, DK);
-  // Light highlight across forehead
-  fill(ctx, 15, 2, 4, 1, LO);
-
-  // Eyes — angled, smaller, with shine
-  fill(ctx, 15, 4, 2, 2, BK);
-  fill(ctx, 16, 4, 1, 1, WH);
-  fill(ctx, 18, 4, 2, 2, BK);
-  fill(ctx, 19, 4, 1, 1, WH);
+  // Single eye dot (side profile — only one eye visible)
+  fill(ctx, 11, 2, 1, 1, BK);
 
   // Nose
-  fill(ctx, 17, 6, 1, 1, PK);
+  fill(ctx, 13, 3, 1, 1, PK);
+}
 
-  // Mouth
-  fill(ctx, 16, 7, 1, 1, BK);
-  fill(ctx, 18, 7, 1, 1, BK);
+// ── torso — low, simple rounded block ──────────────────────────────
+function drawTorso(ctx: Ctx) {
+  const { BK, OR, CR } = C;
+  fill(ctx, 2, 5, 9, 4, BK);     // outline
+  fill(ctx, 3, 6, 7, 2, OR);     // orange fill
+  fill(ctx, 4, 7, 5, 1, CR);     // cream belly strip
+}
+
+// ── ground shadow — flat ellipse under the feet ─────────────────────
+function drawShadow(ctx: Ctx) {
+  fill(ctx, 3, 11, 9, 1, C.SH);
 }
 
 // ── walk ──────────────────────────────────────────────────────────
@@ -82,33 +74,22 @@ function drawWalk(ctx: Ctx, frame: number, dir: 1 | -1) {
   ctx.clearRect(0, 0, CW_PX, CH_PX);
   if (dir === -1) { ctx.save(); ctx.translate(CW_PX, 0); ctx.scale(-1, 1); }
 
-  // Tail — long, curved, tapering at the tip
-  fill(ctx, 0,  7, 1, 1, C.BK);
-  fill(ctx, 0,  8, 2, 3, C.BK);
-  fill(ctx, 1,  9, 1, 2, C.OR);
-  fill(ctx, 1, 11, 2, 1, C.BK);
-  fill(ctx, 2, 11, 1, 1, C.OR);
+  drawShadow(ctx);
 
-  // Body — elongated, tapered torso (wider than tall, low profile)
-  fill(ctx, 2, 8, 13, 5, C.BK);
-  fill(ctx, 3, 9, 11, 3, C.OR);
-  fill(ctx, 5, 9,  7, 3, C.CR);
-  fill(ctx, 4, 9, 1, 3, C.DK);
-  fill(ctx, 11,9, 1, 3, C.DK);
+  // Tail — connected hook curling up from the rear of the body
+  fill(ctx, 1, 3, 1, 3, C.BK); fill(ctx, 1, 4, 1, 1, C.OR);
+  fill(ctx, 0, 1, 2, 2, C.BK); fill(ctx, 0, 1, 1, 1, C.OR);
 
+  drawTorso(ctx);
   drawHead(ctx);
 
-  // Legs — slimmer, tapered, frame 0 = neutral, frame 1 = stride
+  // Legs — small stubs, alternate per frame
   if (frame === 0) {
-    fill(ctx,  3, 13, 2, 3, C.BK); fill(ctx,  3, 13, 2, 2, C.OR); fill(ctx,  3, 15, 2, 1, C.CR);
-    fill(ctx,  6, 13, 2, 3, C.BK); fill(ctx,  6, 13, 2, 2, C.OR); fill(ctx,  6, 15, 2, 1, C.CR);
-    fill(ctx,  9, 13, 2, 3, C.BK); fill(ctx,  9, 13, 2, 2, C.OR); fill(ctx,  9, 15, 2, 1, C.CR);
-    fill(ctx, 11, 13, 2, 3, C.BK); fill(ctx, 11, 13, 2, 2, C.OR); fill(ctx, 11, 15, 2, 1, C.CR);
+    fill(ctx, 3, 9, 1, 2, C.BK); fill(ctx, 3, 9, 1, 1, C.OR);
+    fill(ctx, 8, 9, 1, 2, C.BK); fill(ctx, 8, 9, 1, 1, C.OR);
   } else {
-    fill(ctx,  2, 12, 2, 2, C.BK); fill(ctx,  2, 12, 2, 1, C.OR); fill(ctx,  2, 13, 2, 1, C.CR);
-    fill(ctx,  6, 13, 2, 3, C.BK); fill(ctx,  6, 13, 2, 2, C.OR); fill(ctx,  5, 15, 2, 1, C.CR);
-    fill(ctx,  9, 12, 2, 2, C.BK); fill(ctx,  9, 12, 2, 1, C.OR); fill(ctx,  9, 13, 2, 1, C.CR);
-    fill(ctx, 12, 13, 2, 3, C.BK); fill(ctx, 12, 13, 2, 2, C.OR); fill(ctx, 11, 15, 2, 1, C.CR);
+    fill(ctx, 4, 9, 1, 2, C.BK); fill(ctx, 4, 9, 1, 1, C.OR);
+    fill(ctx, 7, 9, 1, 2, C.BK); fill(ctx, 7, 9, 1, 1, C.OR);
   }
 
   if (dir === -1) ctx.restore();
@@ -119,28 +100,21 @@ function drawSprint(ctx: Ctx, frame: number, dir: 1 | -1) {
   ctx.clearRect(0, 0, CW_PX, CH_PX);
   if (dir === -1) { ctx.save(); ctx.translate(CW_PX, 0); ctx.scale(-1, 1); }
 
-  // Tail streams back, low and stretched
-  fill(ctx, 0, 9, 1, 1, C.BK);
-  fill(ctx, 0,10, 2, 2, C.OR);
-  fill(ctx, 2, 8, 13, 5, C.BK);
-  fill(ctx, 3, 9, 11, 3, C.OR);
-  fill(ctx, 5, 9,  7, 3, C.CR);
-  fill(ctx, 4, 9, 1, 3, C.DK);
-  fill(ctx, 11,9, 1, 3, C.DK);
+  drawShadow(ctx);
 
+  // Tail streams flat behind
+  fill(ctx, 0, 5, 2, 1, C.BK); fill(ctx, 0, 6, 1, 1, C.OR);
+
+  drawTorso(ctx);
   drawHead(ctx);
 
-  // Gallop — legs fully extended
+  // Gallop — legs stretched further apart
   if (frame === 0) {
-    fill(ctx,  1, 12, 2, 2, C.BK); fill(ctx,  1, 12, 2, 1, C.OR); fill(ctx,  1, 13, 2, 1, C.CR);
-    fill(ctx,  5, 13, 2, 2, C.BK); fill(ctx,  5, 13, 2, 1, C.OR); fill(ctx,  4, 14, 2, 1, C.CR);
-    fill(ctx,  9, 12, 2, 2, C.BK); fill(ctx,  9, 12, 2, 1, C.OR); fill(ctx, 10, 13, 2, 1, C.CR);
-    fill(ctx, 12, 13, 2, 2, C.BK); fill(ctx, 12, 13, 2, 1, C.OR); fill(ctx, 11, 14, 2, 1, C.CR);
+    fill(ctx, 2, 9, 1, 2, C.BK); fill(ctx, 2, 9, 1, 1, C.OR);
+    fill(ctx, 9, 9, 1, 2, C.BK); fill(ctx, 9, 9, 1, 1, C.OR);
   } else {
-    fill(ctx,  3, 13, 2, 2, C.BK); fill(ctx,  3, 13, 2, 1, C.OR); fill(ctx,  4, 14, 2, 1, C.CR);
-    fill(ctx,  6, 12, 2, 2, C.BK); fill(ctx,  6, 12, 2, 1, C.OR); fill(ctx,  5, 13, 2, 1, C.CR);
-    fill(ctx,  8, 13, 2, 2, C.BK); fill(ctx,  8, 13, 2, 1, C.OR); fill(ctx,  9, 14, 2, 1, C.CR);
-    fill(ctx, 11, 12, 2, 2, C.BK); fill(ctx, 11, 12, 2, 1, C.OR); fill(ctx, 10, 13, 2, 1, C.CR);
+    fill(ctx, 5, 9, 1, 2, C.BK); fill(ctx, 5, 9, 1, 1, C.OR);
+    fill(ctx, 6, 9, 1, 2, C.BK); fill(ctx, 6, 9, 1, 1, C.OR);
   }
 
   if (dir === -1) ctx.restore();
@@ -149,61 +123,61 @@ function drawSprint(ctx: Ctx, frame: number, dir: 1 | -1) {
 // ── idle sit ──────────────────────────────────────────────────────
 function drawSit(ctx: Ctx) {
   ctx.clearRect(0, 0, CW_PX, CH_PX);
-  // Tail wraps around to front-left
-  fill(ctx, 0, 11, 1, 3, C.BK);
-  fill(ctx, 0, 12, 1, 2, C.OR);
-  fill(ctx, 1, 14, 3, 1, C.BK);
-  fill(ctx, 1, 13, 3, 1, C.OR);
-  // Puffier sitting torso — taller, rounder
-  fill(ctx, 2, 7, 13, 7, C.BK);
-  fill(ctx, 3, 8, 11, 5, C.OR);
-  fill(ctx, 5, 8,  7, 5, C.CR);
-  fill(ctx, 4, 8, 1, 5, C.DK);
-  fill(ctx, 11,8, 1, 5, C.DK);
-  // Paws sitting flat
-  fill(ctx, 3, 13, 3, 1, C.BK); fill(ctx, 3, 13, 3, 1, C.CR);
-  fill(ctx, 8, 13, 3, 1, C.BK); fill(ctx, 8, 13, 3, 1, C.CR);
+
+  fill(ctx, 3, 11, 9, 1, C.SH);
+
+  // Tail curls around to the front
+  fill(ctx, 0, 5, 1, 3, C.BK); fill(ctx, 0, 6, 1, 1, C.OR);
+  fill(ctx, 0, 7, 3, 1, C.BK); fill(ctx, 1, 7, 1, 1, C.OR);
+
+  // Taller, puffier sitting torso
+  fill(ctx, 2, 4, 9, 5, C.BK);
+  fill(ctx, 3, 5, 7, 3, C.OR);
+  fill(ctx, 4, 6, 5, 1, C.CR);
+
+  // Front paws together
+  fill(ctx, 3, 9, 2, 1, C.BK); fill(ctx, 3, 9, 2, 1, C.OR);
+  fill(ctx, 7, 9, 2, 1, C.BK); fill(ctx, 7, 9, 2, 1, C.OR);
+
   drawHead(ctx);
 }
 
 // ── idle sleep ────────────────────────────────────────────────────
 function drawSleep(ctx: Ctx) {
   ctx.clearRect(0, 0, CW_PX, CH_PX);
-  // Curled blob, low and wide
-  fill(ctx, 2, 6, 15, 8, C.BK);
-  fill(ctx, 3, 7, 13, 6, C.OR);
-  fill(ctx, 5, 8,  8, 4, C.CR);
-  fill(ctx, 4, 7, 1, 6, C.DK);
-  fill(ctx, 12,7, 1, 6, C.DK);
-  // Curled tail tip
-  fill(ctx, 1, 9, 1, 3, C.BK);
-  fill(ctx, 1, 10,1, 2, C.OR);
+
+  fill(ctx, 2, 11, 10, 1, C.SH);
+
+  // Curled low blob
+  fill(ctx, 2, 6, 11, 5, C.BK);
+  fill(ctx, 3, 7, 9, 3, C.OR);
+  fill(ctx, 4, 8, 6, 2, C.CR);
+
+  // Curled tail tip tucked beside the body
+  fill(ctx, 0, 7, 2, 2, C.BK); fill(ctx, 1, 8, 1, 1, C.OR);
+
   // Tiny ear bumps
-  fill(ctx, 6, 6, 2, 1, C.OR); fill(ctx, 6, 6, 1, 1, C.PK);
-  fill(ctx, 10,6, 2, 1, C.OR); fill(ctx, 10,6, 1, 1, C.PK);
-  // Closed eyes (dashes)
-  fill(ctx, 7, 8, 2, 1, C.BK);
-  fill(ctx, 11,8, 2, 1, C.BK);
+  fill(ctx, 5, 6, 1, 1, C.BK);
+  fill(ctx, 8, 6, 1, 1, C.BK);
+
+  // Closed eye (dash)
+  fill(ctx, 6, 8, 2, 1, C.BK);
+
   // Sleeping nose
-  fill(ctx, 9, 9, 1, 1, C.PK);
+  fill(ctx, 9, 8, 1, 1, C.PK);
+
   // Z z
-  fill(ctx, 16, 4, 1, 1, C.OR);
-  fill(ctx, 17, 3, 1, 1, C.LO);
-  fill(ctx, 18, 2, 1, 1, C.PK);
+  fill(ctx, 12, 3, 1, 1, C.OR);
+  fill(ctx, 13, 2, 1, 1, C.LO);
 }
 
 // ── idle lick ────────────────────────────────────────────────────
 function drawLick(ctx: Ctx, frame: number) {
   drawSit(ctx);
   if (frame === 0) {
-    fill(ctx, 3, 10, 2, 3, C.BK);
-    fill(ctx, 3, 10, 2, 2, C.OR);
-    fill(ctx, 3, 12, 2, 1, C.CR);
+    fill(ctx, 2, 7, 1, 2, C.BK); fill(ctx, 2, 7, 1, 1, C.OR);
   } else {
-    fill(ctx, 3, 7, 2, 4, C.BK);
-    fill(ctx, 3, 7, 2, 3, C.OR);
-    fill(ctx, 2, 6, 2, 1, C.CR);
-    fill(ctx, 3, 10,2, 1, C.CR);
+    fill(ctx, 2, 5, 1, 3, C.BK); fill(ctx, 2, 5, 1, 2, C.OR);
   }
 }
 
@@ -212,23 +186,17 @@ function drawBump(ctx: Ctx, dir: 1 | -1) {
   ctx.clearRect(0, 0, CW_PX, CH_PX);
   if (dir === -1) { ctx.save(); ctx.translate(CW_PX, 0); ctx.scale(-1, 1); }
 
-  fill(ctx, 0, 11, 1, 3, C.BK);
-  fill(ctx, 0, 12, 1, 2, C.OR);
-  fill(ctx, 2, 8, 13, 5, C.BK);
-  fill(ctx, 3, 9, 11, 3, C.OR);
-  fill(ctx, 5, 9,  7, 3, C.CR);
-  fill(ctx, 4, 9, 1, 3, C.DK);
-  fill(ctx, 11,9, 1, 3, C.DK);
+  drawShadow(ctx);
+  fill(ctx, 1, 3, 1, 3, C.BK); fill(ctx, 1, 4, 1, 1, C.OR);
+  fill(ctx, 0, 2, 2, 2, C.BK); fill(ctx, 0, 3, 1, 1, C.OR);
+  drawTorso(ctx);
   drawHead(ctx);
-  fill(ctx,  3, 13, 2, 3, C.BK); fill(ctx,  3, 13, 2, 2, C.OR); fill(ctx,  3, 15, 2, 1, C.CR);
-  fill(ctx,  6, 13, 2, 3, C.BK); fill(ctx,  6, 13, 2, 2, C.OR); fill(ctx,  6, 15, 2, 1, C.CR);
-  fill(ctx,  9, 13, 2, 3, C.BK); fill(ctx,  9, 13, 2, 2, C.OR); fill(ctx,  9, 15, 2, 1, C.CR);
-  fill(ctx, 11, 13, 2, 3, C.BK); fill(ctx, 11, 13, 2, 2, C.OR); fill(ctx, 11, 15, 2, 1, C.CR);
+  fill(ctx, 3, 9, 1, 2, C.BK); fill(ctx, 3, 9, 1, 1, C.OR);
+  fill(ctx, 8, 9, 1, 2, C.BK); fill(ctx, 8, 9, 1, 1, C.OR);
+
   // ? mark above head
-  fill(ctx, 19, 0, 1, 1, C.LO);
-  fill(ctx, 19, 1, 1, 2, C.LO);
-  fill(ctx, 20, 0, 1, 1, C.LO);
-  fill(ctx, 20, 2, 1, 1, C.LO);
+  fill(ctx, 13, 0, 1, 1, C.LO);
+  fill(ctx, 14, 0, 1, 1, C.LO);
 
   if (dir === -1) ctx.restore();
 }
@@ -240,19 +208,16 @@ function drawPoke(ctx: Ctx, dir: 1 | -1) {
   ctx.translate(0, -P * 2);
   if (dir === -1) { ctx.translate(CW_PX, 0); ctx.scale(-1, 1); }
 
-  fill(ctx, 0, 10, 1, 3, C.BK);
-  fill(ctx, 0, 11, 1, 2, C.OR);
-  fill(ctx, 2, 8, 13, 5, C.BK);
-  fill(ctx, 3, 9, 11, 3, C.OR);
-  fill(ctx, 5, 9,  7, 3, C.CR);
+  drawShadow(ctx);
+  fill(ctx, 1, 3, 1, 3, C.BK); fill(ctx, 1, 4, 1, 1, C.OR);
+  drawTorso(ctx);
   drawHead(ctx);
-  fill(ctx,  3, 13, 2, 2, C.BK); fill(ctx,  3, 13, 2, 1, C.OR); fill(ctx,  3, 14, 2, 1, C.CR);
-  fill(ctx,  7, 13, 2, 2, C.BK); fill(ctx,  7, 13, 2, 1, C.OR); fill(ctx,  7, 14, 2, 1, C.CR);
-  fill(ctx,  9, 13, 2, 2, C.BK); fill(ctx,  9, 13, 2, 1, C.OR); fill(ctx,  9, 14, 2, 1, C.CR);
-  fill(ctx, 11, 13, 2, 2, C.BK); fill(ctx, 11, 13, 2, 1, C.OR); fill(ctx, 11, 14, 2, 1, C.CR);
+  // Legs tucked
+  fill(ctx, 4, 9, 1, 1, C.BK); fill(ctx, 4, 9, 1, 1, C.OR);
+  fill(ctx, 7, 9, 1, 1, C.BK); fill(ctx, 7, 9, 1, 1, C.OR);
   // !! above
-  fill(ctx, 9, 0, 1, 2, C.LO);
-  fill(ctx, 11,0, 1, 2, C.LO);
+  fill(ctx, 10, 0, 1, 2, C.LO);
+  fill(ctx, 12, 0, 1, 2, C.LO);
 
   ctx.restore();
 }
@@ -266,18 +231,12 @@ function drawHold(ctx: Ctx, frame: number) {
   ctx.rotate(angle);
   ctx.translate(-CW_PX / 2, -CH_PX / 2);
 
-  fill(ctx, 0, 10, 1, 3, C.BK);
-  fill(ctx, 0, 11, 1, 2, C.OR);
-  fill(ctx, 2, 8, 13, 5, C.BK);
-  fill(ctx, 3, 9, 11, 3, C.OR);
-  fill(ctx, 5, 9,  7, 3, C.CR);
-  fill(ctx, 4, 9, 1, 3, C.DK);
-  fill(ctx, 11,9, 1, 3, C.DK);
+  drawShadow(ctx);
+  fill(ctx, 1, 3, 1, 3, C.BK); fill(ctx, 1, 4, 1, 1, C.OR);
+  drawTorso(ctx);
   drawHead(ctx);
-  fill(ctx,  1, 13, 2, 3, C.BK); fill(ctx,  1, 13, 2, 2, C.OR); fill(ctx,  1, 15, 2, 1, C.CR);
-  fill(ctx,  5, 13, 2, 3, C.BK); fill(ctx,  5, 13, 2, 2, C.OR); fill(ctx,  5, 15, 2, 1, C.CR);
-  fill(ctx,  9, 13, 2, 3, C.BK); fill(ctx,  9, 13, 2, 2, C.OR); fill(ctx,  9, 15, 2, 1, C.CR);
-  fill(ctx, 12, 13, 2, 3, C.BK); fill(ctx, 12, 13, 2, 2, C.OR); fill(ctx, 12, 15, 2, 1, C.CR);
+  fill(ctx, 2, 9, 1, 2, C.BK); fill(ctx, 2, 9, 1, 1, C.OR);
+  fill(ctx, 9, 9, 1, 2, C.BK); fill(ctx, 9, 9, 1, 1, C.OR);
 
   ctx.restore();
 }
