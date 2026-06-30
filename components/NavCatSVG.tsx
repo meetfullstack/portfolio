@@ -5,21 +5,30 @@ import { setup, assign } from "xstate";
 import { useMachine } from "@xstate/react";
 import gsap from "gsap";
 
-// ── canvas size ───────────────────────────────────────────────────
-const CW = 54;
-const CH = 44;
-const WALK_SPD   = 45;
-const SPRINT_SPD = 160;
-const MARGIN     = 12;
+// ── dimensions ────────────────────────────────────────────────────
+const CW     = 54;
+const CH     = 44;
+const MARGIN = 12;
+
+// speeds (px/s)
+const SPD_STALK  = 18;
+const SPD_WALK   = 45;
+const SPD_SPRINT = 160;
+const SPD_ZOOM   = 320;
 
 // ── XState machine ────────────────────────────────────────────────
-// All state logic lives here. The component only handles GSAP + DOM.
-
 type CatContext = {
-  idlePick:    number;   // 0–1, decides which idle animation
-  shouldIdle:  boolean;  // flip after hitting a wall?
-  idleDur:     number;   // ms to stay idle
-  sprintX:     number;   // pixel target for sprint-to-link
+  // idle decisions
+  idlePick:    number;
+  shouldIdle:  boolean;
+  idleDur:     number;
+  // sprinting to a nav link
+  sprintX:     number;
+  // walk mode this cycle
+  walkSpeed:   number;   // px/s — varies so she doesn't always move at same pace
+  shouldZoom:  boolean;  // after bump: do zoomies instead of walk?
+  // mid-stop
+  midStopPick: number;   // which mini-idle to show
 };
 
 type CatEvent =
@@ -28,20 +37,22 @@ type CatEvent =
   | { type: "ARRIVED" }
   | { type: "LINK_LEAVE" }
   | { type: "POKE" }
-  | { type: "SCROLL" };
+  | { type: "SCROLL" }
+  | { type: "MID_STOP" }    // random timer fires while walking
+  | { type: "RESUME" }      // mid-stop over, keep going
+  | { type: "ZOOM_DONE" };  // all zoomies bounces complete
 
 const catMachine = setup({
-  types: {
-    context: {} as CatContext,
-    events:  {} as CatEvent,
-  },
-  // Named delays — can read context for dynamic values (XState v5 pattern)
+  types: { context: {} as CatContext, events: {} as CatEvent },
   delays: {
-    IDLE_DUR: ({ context }: { context: CatContext }) => context.idleDur,
+    IDLE_DUR:     ({ context }: { context: CatContext }) => context.idleDur,
+    MID_STOP_DUR: ({ context }: { context: CatContext }) =>
+      context.midStopPick < 0.5 ? 900 + Math.random() * 600   // sit — short
+                                 : 1400 + Math.random() * 800, // lick — slightly longer
   },
-  // Named guards — keeps machine config readable
   guards: {
     shouldIdle: ({ context }: { context: CatContext }) => context.shouldIdle,
+    shouldZoom: ({ context }: { context: CatContext }) => context.shouldZoom,
     pickSit:    ({ context }: { context: CatContext }) => context.idlePick < 0.33,
     pickLick:   ({ context }: { context: CatContext }) => context.idlePick < 0.66,
   },
@@ -49,22 +60,33 @@ const catMachine = setup({
   id: "glitch",
   initial: "walk",
   context: {
-    idlePick:   0.5,
-    shouldIdle: false,
-    idleDur:    2000,
-    sprintX:    0,
+    idlePick:    0.5,
+    shouldIdle:  false,
+    idleDur:     2000,
+    sprintX:     0,
+    walkSpeed:   SPD_WALK,
+    shouldZoom:  false,
+    midStopPick: 0.5,
   },
   states: {
+
+    // ── walking normally ─────────────────────────────────────────
     walk: {
       on: {
         EDGE_HIT: {
           target: "bump",
-          // Capture randomness here so guards stay pure
           actions: assign({
-            shouldIdle: () => Math.random() < 0.35,
-            idlePick:   () => Math.random(),
-            idleDur:    () => 1800 + Math.random() * 3000,
+            shouldIdle:  () => Math.random() < 0.40,
+            shouldZoom:  () => Math.random() < 0.12,  // 12% chance of zoomies
+            idlePick:    () => Math.random(),
+            idleDur:     () => 2000 + Math.random() * 4000,
+            // next walk speed — sometimes she creeps, usually normal
+            walkSpeed:   () => Math.random() < 0.2 ? SPD_STALK : SPD_WALK + (Math.random() - 0.5) * 20,
           }),
+        },
+        MID_STOP: {
+          target: "mid-stop",
+          actions: assign({ midStopPick: () => Math.random() }),
         },
         SPRINT_TO: {
           target: "sprint",
@@ -75,6 +97,33 @@ const catMachine = setup({
       },
     },
 
+    // ── mid-walk pause (real cats stop randomly) ─────────────────
+    "mid-stop": {
+      // machine-owned timer, then resume — no manual setTimeout
+      after: { MID_STOP_DUR: "walk" },
+      on: {
+        POKE:      "poke",
+        SCROLL:    "hold",
+        SPRINT_TO: {
+          target: "sprint",
+          actions: assign({ sprintX: ({ event }) => (event as { type: "SPRINT_TO"; x: number }).x }),
+        },
+      },
+    },
+
+    // ── zoomies — bounces handled in component, machine just waits ─
+    zoomies: {
+      on: {
+        ZOOM_DONE: [
+          { guard: "shouldIdle", target: "idle-pick" },
+          { target: "walk" },
+        ],
+        POKE:   "poke",
+        SCROLL: "hold",
+      },
+    },
+
+    // ── sprinting to a nav link ───────────────────────────────────
     sprint: {
       on: {
         ARRIVED:    "idle-sit",
@@ -82,9 +131,11 @@ const catMachine = setup({
         EDGE_HIT: {
           target: "bump",
           actions: assign({
-            shouldIdle: () => Math.random() < 0.35,
+            shouldIdle: () => Math.random() < 0.40,
+            shouldZoom: () => Math.random() < 0.12,
             idlePick:   () => Math.random(),
-            idleDur:    () => 1800 + Math.random() * 3000,
+            idleDur:    () => 2000 + Math.random() * 4000,
+            walkSpeed:  () => SPD_WALK + (Math.random() - 0.5) * 20,
           }),
         },
         POKE:   "poke",
@@ -92,18 +143,19 @@ const catMachine = setup({
       },
     },
 
+    // ── hits a wall ───────────────────────────────────────────────
     bump: {
-      // XState owns the 800 ms timeout — no manual setTimeout needed
       after: {
-        800: [
-          { guard: "shouldIdle", target: "idle-pick" },
+        700: [
+          { guard: "shouldZoom",  target: "zoomies" },
+          { guard: "shouldIdle",  target: "idle-pick" },
           { target: "walk" },
         ],
       },
       on: { POKE: "poke" },
     },
 
-    // Transient — immediately resolves to an idle based on stored random value
+    // ── transient: pick an idle ───────────────────────────────────
     "idle-pick": {
       always: [
         { guard: "pickSit",  target: "idle-sit" },
@@ -112,6 +164,7 @@ const catMachine = setup({
       ],
     },
 
+    // ── idle states ───────────────────────────────────────────────
     "idle-sit": {
       after: { IDLE_DUR: "walk" },
       on: {
@@ -126,11 +179,27 @@ const catMachine = setup({
     },
 
     "idle-lick":  { after: { IDLE_DUR: "walk" }, on: { POKE: "poke", SCROLL: "hold" } },
-    "idle-sleep": { after: { IDLE_DUR: "walk" }, on: { POKE: "poke", SCROLL: "hold" } },
 
-    poke:      { after: { 350: "run-away" } },
+    "idle-sleep": {
+      after: {
+        // sleeps longer — she's really comfortable
+        IDLE_DUR: {
+          target: "walk",
+          actions: assign({ walkSpeed: () => SPD_STALK }), // groggy after sleeping
+        },
+      },
+      on: { POKE: "poke", SCROLL: "hold" },
+    },
+
+    // ── poke reaction ─────────────────────────────────────────────
+    poke:       { after: { 350: "run-away" } },
     "run-away": { on: { ARRIVED: "idle-sit", POKE: "poke" } },
-    hold:      { after: { 900: "walk" }, on: { POKE: "poke" } },
+
+    // ── scroll hold ───────────────────────────────────────────────
+    hold: {
+      after: { 900: "walk" },
+      on: { POKE: "poke" },
+    },
   },
 });
 
@@ -148,7 +217,8 @@ const IDLE_MSGS = [
   "// meow", "git commit -m 'meow'", "null pointer? meow.",
   "i see u", "(ฅ^•ﻌ•^)ฅ", "^._.^", "feed me pls",
 ];
-const POKE_MSGS = ["hey!!", "ouch!", "( >ᴗ<)", "uwu", "hiss!", "mrow?", "!!"];
+const POKE_MSGS  = ["hey!!", "ouch!", "( >ᴗ<)", "uwu", "hiss!", "mrow?", "!!"];
+const ZOOM_MSGS  = ["ZOOMIES!!", "weeee!", "zoom zoom", ":3c", "go go go!"];
 
 // ── component ────────────────────────────────────────────────────
 export default function NavCatSVG() {
@@ -169,11 +239,11 @@ export default function NavCatSVG() {
   const pawRaisedRef = useRef<SVGRectElement>(null);
   const zzRef        = useRef<SVGTextElement>(null);
 
-  // position / direction
-  const xRef      = useRef(80);
-  const dirRef    = useRef<1 | -1>(1);
-  const gsapRef   = useRef<gsap.core.Tween | null>(null);
-  const animTlRef = useRef<gsap.core.Timeline | null>(null);
+  const xRef        = useRef(80);
+  const dirRef      = useRef<1 | -1>(1);
+  const gsapRef     = useRef<gsap.core.Tween | null>(null);
+  const animTlRef   = useRef<gsap.core.Timeline | null>(null);
+  const zoomLeftRef = useRef(0);  // bounces remaining in zoomies
   const lastScrollY = useRef(0);
 
   const [bubble, setBubble]  = useState<string | null>(null);
@@ -181,7 +251,6 @@ export default function NavCatSVG() {
   const bubbleTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const msgTimer    = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  // ── XState ───────────────────────────────────────────────────
   const [state, send] = useMachine(catMachine);
 
   const updatePos = useCallback(() => {
@@ -195,30 +264,31 @@ export default function NavCatSVG() {
   }, []);
 
   // ── SVG animation helpers ─────────────────────────────────────
-  const LEG_ORIGIN = { transformOrigin: "50% 0%" };
+  const LEG_O = { transformOrigin: "50% 0%" };
 
   function applyDir(dir: 1 | -1) {
     gsap.set(catGroupRef.current, { scaleX: dir, transformOrigin: `${CW / 2}px ${CH}px` });
   }
 
   function resetVisuals() {
-    gsap.set(zzRef.current,       { opacity: 0 });
-    gsap.set(pawRaisedRef.current,{ opacity: 0, y: 0, rotation: 0 });
-    gsap.set(catGroupRef.current, { y: 0, rotation: 0 });
+    gsap.set(zzRef.current,        { opacity: 0 });
+    gsap.set(pawRaisedRef.current, { opacity: 0, y: 0, rotation: 0 });
+    gsap.set(catGroupRef.current,  { y: 0, rotation: 0 });
     gsap.set([eyeLRef.current, eyeRRef.current], { scaleY: 1, transformOrigin: "center center" });
     gsap.to(tailRef.current, { rotation: 0, duration: 0.3, transformOrigin: "10px 34px" });
     gsap.killTweensOf([bodyRef.current, headRef.current]);
     gsap.set([bodyRef.current, headRef.current], { y: 0, scaleX: 1, scaleY: 1 });
   }
 
-  function playWalkAnim(fast = false) {
+  function playWalkAnim(speed: "normal" | "fast" | "slow" = "normal") {
     animTlRef.current?.kill();
-    const d = fast ? 0.1 : 0.2;
+    const d = speed === "fast" ? 0.08 : speed === "slow" ? 0.35 : 0.2;
+    const rot = speed === "slow" ? 14 : 22; // smaller leg swing when stalking
     const tl = gsap.timeline({ repeat: -1 });
-    tl.to([legFLRef.current, legBRRef.current], { rotation:  22, duration: d, ease: "sine.inOut", ...LEG_ORIGIN })
-      .to([legFRRef.current, legBLRef.current], { rotation: -22, duration: d, ease: "sine.inOut", ...LEG_ORIGIN }, 0)
-      .to([legFLRef.current, legBRRef.current], { rotation: -22, duration: d, ease: "sine.inOut", ...LEG_ORIGIN })
-      .to([legFRRef.current, legBLRef.current], { rotation:  22, duration: d, ease: "sine.inOut", ...LEG_ORIGIN });
+    tl.to([legFLRef.current, legBRRef.current], { rotation:  rot, duration: d, ease: "sine.inOut", ...LEG_O })
+      .to([legFRRef.current, legBLRef.current], { rotation: -rot, duration: d, ease: "sine.inOut", ...LEG_O }, 0)
+      .to([legFLRef.current, legBRRef.current], { rotation: -rot, duration: d, ease: "sine.inOut", ...LEG_O })
+      .to([legFRRef.current, legBLRef.current], { rotation:  rot, duration: d, ease: "sine.inOut", ...LEG_O });
     gsap.to(bodyRef.current, { y: -1.5, duration: d * 2, ease: "sine.inOut", yoyo: true, repeat: -1 });
     gsap.to(headRef.current, { y: -1.5, duration: d * 2, ease: "sine.inOut", yoyo: true, repeat: -1 });
     animTlRef.current = tl;
@@ -228,7 +298,7 @@ export default function NavCatSVG() {
     animTlRef.current?.kill();
     gsap.killTweensOf([bodyRef.current, headRef.current]);
     gsap.set([legFLRef.current, legFRRef.current, legBLRef.current, legBRRef.current],
-      { rotation: 0, ...LEG_ORIGIN });
+      { rotation: 0, ...LEG_O });
     animTlRef.current = gsap.timeline({ repeat: -1, yoyo: true });
     animTlRef.current.to(tailRef.current, { rotation: 18, duration: 1.3, ease: "sine.inOut",
       transformOrigin: "10px 34px" });
@@ -238,7 +308,7 @@ export default function NavCatSVG() {
     animTlRef.current?.kill();
     gsap.killTweensOf([bodyRef.current, headRef.current]);
     gsap.set([legFLRef.current, legFRRef.current, legBLRef.current, legBRRef.current],
-      { rotation: 0, ...LEG_ORIGIN });
+      { rotation: 0, ...LEG_O });
     animTlRef.current = gsap.timeline({ repeat: -1, yoyo: true });
     animTlRef.current.to(bodyRef.current, { scaleX: 1.04, scaleY: 0.96, duration: 1.6,
       ease: "sine.inOut", transformOrigin: "center center" });
@@ -251,7 +321,7 @@ export default function NavCatSVG() {
     animTlRef.current?.kill();
     gsap.killTweensOf([bodyRef.current, headRef.current]);
     gsap.set([legFLRef.current, legFRRef.current, legBLRef.current, legBRRef.current],
-      { rotation: 0, ...LEG_ORIGIN });
+      { rotation: 0, ...LEG_O });
     gsap.set(pawRaisedRef.current, { opacity: 1 });
     animTlRef.current = gsap.timeline({ repeat: -1, yoyo: true });
     animTlRef.current.to(pawRaisedRef.current, { y: -8, rotation: -20, duration: 0.5,
@@ -262,7 +332,7 @@ export default function NavCatSVG() {
     animTlRef.current?.kill();
     gsap.killTweensOf([bodyRef.current, headRef.current]);
     gsap.set([legFLRef.current, legFRRef.current, legBLRef.current, legBRRef.current],
-      { rotation: 0, ...LEG_ORIGIN });
+      { rotation: 0, ...LEG_O });
     gsap.to(tailRef.current, { rotation: -30, duration: 0.3, transformOrigin: "10px 34px" });
     gsap.timeline({ repeat: 2, yoyo: true })
       .to(headRef.current, { rotation: 10, duration: 0.2, transformOrigin: "50% 100%" });
@@ -272,7 +342,7 @@ export default function NavCatSVG() {
     animTlRef.current?.kill();
     gsap.killTweensOf([bodyRef.current, headRef.current]);
     gsap.set([legFLRef.current, legFRRef.current, legBLRef.current, legBRRef.current],
-      { rotation: 0, ...LEG_ORIGIN });
+      { rotation: 0, ...LEG_O });
     gsap.timeline()
       .to(catGroupRef.current, { y: -10, duration: 0.15, ease: "power2.out" })
       .to(catGroupRef.current, { y: 0,   duration: 0.30, ease: "bounce.out" });
@@ -282,28 +352,28 @@ export default function NavCatSVG() {
     animTlRef.current?.kill();
     gsap.killTweensOf([bodyRef.current, headRef.current]);
     gsap.set([legFLRef.current, legFRRef.current, legBLRef.current, legBRRef.current],
-      { rotation: 0, ...LEG_ORIGIN });
+      { rotation: 0, ...LEG_O });
     animTlRef.current = gsap.timeline({ repeat: -1, yoyo: true });
     animTlRef.current.to(catGroupRef.current, { rotation: -8, duration: 0.12,
       ease: "sine.inOut", transformOrigin: "center bottom" });
   }
 
   // ── movement ──────────────────────────────────────────────────
-  const sprintTo = useCallback((targetX: number, onDone?: () => void) => {
+  const sprintTo = useCallback((targetX: number, spd: number, onDone?: () => void) => {
     gsapRef.current?.kill();
     dirRef.current = targetX > xRef.current ? 1 : -1;
     applyDir(dirRef.current);
     const dist = Math.abs(targetX - xRef.current);
     gsapRef.current = gsap.to(xRef, {
-      current:  targetX,
-      duration: Math.max(0.2, dist / SPRINT_SPD),
-      ease:     "power2.out",
-      onUpdate:  updatePos,
+      current:    targetX,
+      duration:   Math.max(0.1, dist / spd),
+      ease:       spd >= SPD_ZOOM ? "none" : "power2.out",
+      onUpdate:   updatePos,
       onComplete: onDone,
     });
   }, [updatePos]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const walk = useCallback(() => {
+  const startWalk = useCallback((speed: number) => {
     const wrap = wrapRef.current;
     if (!wrap) return;
     const w      = wrap.getBoundingClientRect().width;
@@ -313,36 +383,76 @@ export default function NavCatSVG() {
     gsapRef.current?.kill();
     gsapRef.current = gsap.to(xRef, {
       current:    target,
-      duration:   dist / WALK_SPD,
+      duration:   dist / speed,
       ease:       "none",
       onUpdate:   updatePos,
       onComplete: () => send({ type: "EDGE_HIT" }),
     });
   }, [send, updatePos]);
 
+  // Recursive zoom bounce — machine just waits for ZOOM_DONE
+  const doZoom = useCallback(() => {
+    const wrap = wrapRef.current;
+    if (!wrap) return;
+    const w      = wrap.getBoundingClientRect().width;
+    const target = dirRef.current === 1 ? w - CW - MARGIN : MARGIN;
+    gsapRef.current = gsap.to(xRef, {
+      current:  target,
+      duration: Math.abs(target - xRef.current) / SPD_ZOOM,
+      ease:     "none",
+      onUpdate: updatePos,
+      onComplete: () => {
+        if (zoomLeftRef.current > 0) {
+          zoomLeftRef.current--;
+          dirRef.current = dirRef.current === 1 ? -1 : 1;
+          applyDir(dirRef.current);
+          doZoom();
+        } else {
+          send({ type: "ZOOM_DONE" });
+        }
+      },
+    });
+  }, [send, updatePos]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // ── react to state changes ────────────────────────────────────
   useEffect(() => {
-    const sv = state.value as string;
+    const sv  = state.value as string;
+    const ctx = state.context;
 
-    // stop movement tween for non-moving states
-    if (!["walk", "sprint", "run-away"].includes(sv)) gsapRef.current?.kill();
+    if (!["walk", "sprint", "run-away", "zoomies"].includes(sv)) {
+      gsapRef.current?.kill();
+    }
 
     resetVisuals();
     applyDir(dirRef.current);
 
     switch (sv) {
-      case "walk":
-        playWalkAnim();
-        walk();
+      case "walk": {
+        const spd = ctx.walkSpeed;
+        playWalkAnim(spd < 30 ? "slow" : "normal");
+        startWalk(spd);
+        break;
+      }
+
+      case "mid-stop":
+        // sit or lick depending on midStopPick (machine fires MID_STOP_DUR timer)
+        if (ctx.midStopPick < 0.5) playSitAnim();
+        else playLickAnim();
+        break;
+
+      case "zoomies":
+        playWalkAnim("fast");
+        zoomLeftRef.current = Math.floor(Math.random() * 2) + 1; // 1-2 extra bounces
+        say(ZOOM_MSGS[Math.floor(Math.random() * ZOOM_MSGS.length)], 2000);
+        doZoom();
         break;
 
       case "sprint":
-        playWalkAnim(true);
-        sprintTo(state.context.sprintX, () => send({ type: "ARRIVED" }));
+        playWalkAnim("fast");
+        sprintTo(ctx.sprintX, SPD_SPRINT, () => send({ type: "ARRIVED" }));
         break;
 
       case "bump":
-        // flip direction so she walks the other way after bump
         dirRef.current = dirRef.current === 1 ? -1 : 1;
         applyDir(dirRef.current);
         playBumpAnim();
@@ -358,13 +468,12 @@ export default function NavCatSVG() {
         break;
 
       case "run-away": {
-        playWalkAnim(true);
-        const w = wrapRef.current?.getBoundingClientRect().width ?? 800;
-        // run away from the poke
+        playWalkAnim("fast");
+        const w      = wrapRef.current?.getBoundingClientRect().width ?? 800;
         dirRef.current = (xRef.current > w / 2 ? -1 : 1) as 1 | -1;
         applyDir(dirRef.current);
         const target = dirRef.current === 1 ? w - CW - MARGIN : MARGIN;
-        sprintTo(target, () => send({ type: "ARRIVED" }));
+        sprintTo(target, SPD_SPRINT, () => send({ type: "ARRIVED" }));
         break;
       }
 
@@ -374,7 +483,20 @@ export default function NavCatSVG() {
     }
   }, [state.value]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── scroll → SCROLL event ─────────────────────────────────────
+  // ── mid-walk random stop timer ────────────────────────────────
+  // Fires only while in walk state; machine discards MID_STOP in other states
+  useEffect(() => {
+    if (state.value !== "walk") return;
+    // 5–12 s after entering walk, maybe stop
+    const delay = 5000 + Math.random() * 7000;
+    const t = setTimeout(() => {
+      if (Math.random() < 0.30) send({ type: "MID_STOP" });
+      // else just keep walking — nothing happens
+    }, delay);
+    return () => clearTimeout(t);
+  }, [state.value, send]);
+
+  // ── scroll ────────────────────────────────────────────────────
   useEffect(() => {
     function onScroll() {
       const delta = Math.abs(window.scrollY - lastScrollY.current);
@@ -392,16 +514,12 @@ export default function NavCatSVG() {
     const navLinks = wrap.closest("header")?.querySelectorAll("nav a");
 
     function onLinkEnter(e: Event) {
-      const link    = e.currentTarget as HTMLElement;
-      const wrapR   = wrap!.getBoundingClientRect();
-      const linkR   = link.getBoundingClientRect();
-      const x       = linkR.left - wrapR.left + linkR.width / 2 - CW / 2;
-      send({ type: "SPRINT_TO", x });
+      const link  = e.currentTarget as HTMLElement;
+      const wrapR = wrap!.getBoundingClientRect();
+      const linkR = link.getBoundingClientRect();
+      send({ type: "SPRINT_TO", x: linkR.left - wrapR.left + linkR.width / 2 - CW / 2 });
     }
-
-    function onLinkLeave() {
-      send({ type: "LINK_LEAVE" });
-    }
+    function onLinkLeave() { send({ type: "LINK_LEAVE" }); }
 
     navLinks?.forEach(l => {
       l.addEventListener("mouseenter", onLinkEnter);
@@ -434,7 +552,6 @@ export default function NavCatSVG() {
     };
   }, [say]);
 
-  // initial position
   useEffect(() => { updatePos(); }, [updatePos]);
 
   // ── render ───────────────────────────────────────────────────
@@ -458,9 +575,7 @@ export default function NavCatSVG() {
             position: "absolute", bottom: CH + 4, left: "50%", transform: "translateX(-50%)",
             fontFamily: "var(--font-mono)", fontSize: "0.5rem", color: "var(--text-muted)",
             whiteSpace: "nowrap", pointerEvents: "none",
-          }}>
-            Glitch
-          </div>
+          }}>Glitch</div>
         )}
 
         {bubble && (
@@ -486,11 +601,8 @@ export default function NavCatSVG() {
         )}
 
         {/* SVG cat — orange tabby */}
-        <svg
-          width={CW} height={CH}
-          viewBox={`0 0 ${CW} ${CH}`}
-          style={{ display: "block", overflow: "visible" }}
-        >
+        <svg width={CW} height={CH} viewBox={`0 0 ${CW} ${CH}`}
+          style={{ display: "block", overflow: "visible" }}>
           <defs>
             <filter id="svg-cat-drop" x="-20%" y="-20%" width="140%" height="140%">
               <feDropShadow dx="0" dy="1" stdDeviation="1"
@@ -509,7 +621,7 @@ export default function NavCatSVG() {
               fill="none" stroke="#D98B3C" strokeWidth="4" strokeLinecap="round"
               style={{ transformOrigin: "10px 34px" }} />
 
-            {/* Body outline + orange + belly */}
+            {/* Body */}
             <ellipse cx="24" cy="32" rx="16" ry="10" fill="#1a0a00" />
             <ellipse ref={bodyRef} cx="24" cy="32" rx="15" ry="9"
               fill="#D98B3C" filter="url(#svg-cat-drop)" />
@@ -536,7 +648,7 @@ export default function NavCatSVG() {
             <rect x="33.5" y="37" width="4" height="7" rx="2" fill="#D98B3C" />
             <ellipse cx="35.5" cy="44.5" rx="2.2" ry="1.2" fill="#F5E6CC" />
 
-            {/* Head outline + orange + cream face */}
+            {/* Head */}
             <circle cx="38" cy="18" r="13" fill="#1a0a00" />
             <circle ref={headRef} cx="38" cy="18" r="12" fill="#D98B3C" />
             <ellipse cx="38" cy="12" rx="7" ry="4" fill="#EFB060" opacity="0.6" />
@@ -554,7 +666,7 @@ export default function NavCatSVG() {
             <polygon points="45,10 43,16 47,16" fill="#D98B3C" />
             <polygon points="44.5,11 43,15.5 46.5,15.5" fill="#F4A0A0" />
 
-            {/* Eyes — big black with white shine */}
+            {/* Eyes */}
             <ellipse ref={eyeLRef} cx="33" cy="17" rx="3.5" ry="3.5" fill="#1a0a00" />
             <circle cx="34.3" cy="15.5" r="1.3" fill="#FFFFFF" />
             <ellipse ref={eyeRRef} cx="43" cy="17" rx="3.5" ry="3.5" fill="#1a0a00" />
@@ -569,15 +681,12 @@ export default function NavCatSVG() {
             <rect ref={pawRaisedRef}
               x="10" y="30" width="5" height="8" rx="2.5"
               fill="#D98B3C" stroke="#1a0a00" strokeWidth="0.8"
-              opacity="0"
-              style={{ transformOrigin: "12px 38px" }} />
+              opacity="0" style={{ transformOrigin: "12px 38px" }} />
 
             {/* Z z (sleep) */}
-            <text ref={zzRef}
-              x="49" y="8"
+            <text ref={zzRef} x="49" y="8"
               fontFamily="var(--font-mono)" fontSize="7"
-              fill="#EFB060" opacity="0"
-              style={{ pointerEvents: "none" }}>
+              fill="#EFB060" opacity="0" style={{ pointerEvents: "none" }}>
               z z
             </text>
 
