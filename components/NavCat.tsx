@@ -3,242 +3,69 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import gsap from "gsap";
 
-// ── pixel grid — small, chunky, itch.io-style mascot sprite ────────
-const P     = 4;    // CSS px per "pixel" — bigger chunks, fewer pixels
-const CW    = 16;   // cat width  in pixels
-const CH    = 13;   // cat height in pixels
-const CW_PX = CW * P;
-const CH_PX = CH * P;
+// ── sprite sheet — Glitch's own original artwork ────────────────────
+// public/glitch-sprite.png: 18 rows of frames, 331x309 per cell.
+const SHEET_SRC = "/glitch-sprite.png";
+const CELL_W    = 331;
+const CELL_H    = 309;
+const SCALE     = 0.22;         // shrink down for the navbar
+const CW_PX     = Math.round(CELL_W * SCALE);
+const CH_PX     = Math.round(CELL_H * SCALE);
 
-const WALK_SPD   = 45;
-const SPRINT_SPD = 160;
-const MARGIN     = 12;
+const WALK_SPD    = 45;
+const SPRINT_SPD  = 160;
+const ZOOMIES_SPD = 260;
+const MARGIN      = 12;
+const NUZZLE_COOLDOWN_MS = 8000;
 
-// ── orange tabby palette — matches the itch.io reference sprite ───
-const C = {
-  BK: "#2a1505",  // dark brown outline (not pure black)
-  OR: "#E0954B",  // warm orange body
-  LO: "#EFB878",  // light orange highlight
-  CR: "#F5E6CC",  // cream chest/belly
-  PK: "#F2A0A8",  // pink nose/mouth
-  DK: "#B06A2C",  // shadow stripe tone
-  SH: "#9A8278",  // ground shadow (muted mauve-grey)
-};
+const ACCENT = "#EFB878";
+
+// ── pose row map (row index, frame count) ───────────────────────────
+const POSE = {
+  walk:       { row: 0,  count: 4 },
+  sprint:     { row: 1,  count: 4 },
+  sitBlink:   { row: 2,  count: 3 },
+  sniffLick:  { row: 3,  count: 4 },
+  sleep:      { row: 4,  count: 4 },
+  alert:      { row: 5,  count: 2 },
+  pounce:     { row: 6,  count: 4 },
+  wobble:     { row: 7,  count: 3 },
+  zoomies:    { row: 8,  count: 4 },
+  midPause:   { row: 9,  count: 1 },
+  stretch:    { row: 10, count: 3 },
+  tailFlick:  { row: 11, count: 2 },
+  playBall:   { row: 12, count: 4 },
+  scratch:    { row: 13, count: 2 },
+  yawn:       { row: 14, count: 2 },
+  tailChase:  { row: 15, count: 4 },
+  nuzzle:     { row: 16, count: 2 },
+  curious:    { row: 17, count: 2 },
+} as const;
+
+type PoseName = keyof typeof POSE;
 
 // ── draw helpers ─────────────────────────────────────────────────
 type Ctx = CanvasRenderingContext2D;
 
-function fill(ctx: Ctx, x: number, y: number, w: number, h: number, c: string) {
-  ctx.fillStyle = c;
-  ctx.fillRect(x * P, y * P, w * P, h * P);
-}
+function drawFrame(ctx: Ctx, img: HTMLImageElement, pose: PoseName, frame: number, dir: 1 | -1) {
+  const { row, count } = POSE[pose];
+  const col = frame % count;
 
-// ── head — small bump on top of the torso (right side, facing right) ──
-// Head zone: x=10..14 (5 wide), y=1..5 — single eye dot, side-profile.
-function drawHead(ctx: Ctx) {
-  const { BK, OR, CR, PK } = C;
-
-  // Ears — two tiny triangular nubs
-  fill(ctx, 10, 0, 1, 1, BK);
-  fill(ctx, 13, 0, 1, 1, BK);
-
-  // Head block — smaller than the torso
-  fill(ctx, 10, 1, 5, 5, BK);    // outline
-  fill(ctx, 11, 2, 3, 3, OR);    // orange fill
-
-  // Cream muzzle patch
-  fill(ctx, 12, 3, 2, 2, CR);
-
-  // Single eye dot (side profile — only one eye visible)
-  fill(ctx, 11, 2, 1, 1, BK);
-
-  // Nose
-  fill(ctx, 13, 3, 1, 1, PK);
-}
-
-// ── torso — low, simple rounded block ──────────────────────────────
-function drawTorso(ctx: Ctx) {
-  const { BK, OR, CR } = C;
-  fill(ctx, 2, 5, 9, 4, BK);     // outline
-  fill(ctx, 3, 6, 7, 2, OR);     // orange fill
-  fill(ctx, 4, 7, 5, 1, CR);     // cream belly strip
-}
-
-// ── ground shadow — flat ellipse under the feet ─────────────────────
-function drawShadow(ctx: Ctx) {
-  fill(ctx, 3, 11, 9, 1, C.SH);
-}
-
-// ── walk ──────────────────────────────────────────────────────────
-function drawWalk(ctx: Ctx, frame: number, dir: 1 | -1) {
   ctx.clearRect(0, 0, CW_PX, CH_PX);
   if (dir === -1) { ctx.save(); ctx.translate(CW_PX, 0); ctx.scale(-1, 1); }
-
-  drawShadow(ctx);
-
-  // Tail — connected hook curling up from the rear of the body
-  fill(ctx, 1, 3, 1, 3, C.BK); fill(ctx, 1, 4, 1, 1, C.OR);
-  fill(ctx, 0, 1, 2, 2, C.BK); fill(ctx, 0, 1, 1, 1, C.OR);
-
-  drawTorso(ctx);
-  drawHead(ctx);
-
-  // Legs — small stubs, alternate per frame
-  if (frame === 0) {
-    fill(ctx, 3, 9, 1, 2, C.BK); fill(ctx, 3, 9, 1, 1, C.OR);
-    fill(ctx, 8, 9, 1, 2, C.BK); fill(ctx, 8, 9, 1, 1, C.OR);
-  } else {
-    fill(ctx, 4, 9, 1, 2, C.BK); fill(ctx, 4, 9, 1, 1, C.OR);
-    fill(ctx, 7, 9, 1, 2, C.BK); fill(ctx, 7, 9, 1, 1, C.OR);
-  }
-
+  ctx.drawImage(
+    img,
+    col * CELL_W, row * CELL_H, CELL_W, CELL_H,
+    0, 0, CW_PX, CH_PX,
+  );
   if (dir === -1) ctx.restore();
 }
 
-// ── sprint ────────────────────────────────────────────────────────
-function drawSprint(ctx: Ctx, frame: number, dir: 1 | -1) {
-  ctx.clearRect(0, 0, CW_PX, CH_PX);
-  if (dir === -1) { ctx.save(); ctx.translate(CW_PX, 0); ctx.scale(-1, 1); }
-
-  drawShadow(ctx);
-
-  // Tail streams flat behind
-  fill(ctx, 0, 5, 2, 1, C.BK); fill(ctx, 0, 6, 1, 1, C.OR);
-
-  drawTorso(ctx);
-  drawHead(ctx);
-
-  // Gallop — legs stretched further apart
-  if (frame === 0) {
-    fill(ctx, 2, 9, 1, 2, C.BK); fill(ctx, 2, 9, 1, 1, C.OR);
-    fill(ctx, 9, 9, 1, 2, C.BK); fill(ctx, 9, 9, 1, 1, C.OR);
-  } else {
-    fill(ctx, 5, 9, 1, 2, C.BK); fill(ctx, 5, 9, 1, 1, C.OR);
-    fill(ctx, 6, 9, 1, 2, C.BK); fill(ctx, 6, 9, 1, 1, C.OR);
-  }
-
-  if (dir === -1) ctx.restore();
-}
-
-// ── idle sit ──────────────────────────────────────────────────────
-function drawSit(ctx: Ctx) {
-  ctx.clearRect(0, 0, CW_PX, CH_PX);
-
-  fill(ctx, 3, 11, 9, 1, C.SH);
-
-  // Tail curls around to the front
-  fill(ctx, 0, 5, 1, 3, C.BK); fill(ctx, 0, 6, 1, 1, C.OR);
-  fill(ctx, 0, 7, 3, 1, C.BK); fill(ctx, 1, 7, 1, 1, C.OR);
-
-  // Taller, puffier sitting torso
-  fill(ctx, 2, 4, 9, 5, C.BK);
-  fill(ctx, 3, 5, 7, 3, C.OR);
-  fill(ctx, 4, 6, 5, 1, C.CR);
-
-  // Front paws together
-  fill(ctx, 3, 9, 2, 1, C.BK); fill(ctx, 3, 9, 2, 1, C.OR);
-  fill(ctx, 7, 9, 2, 1, C.BK); fill(ctx, 7, 9, 2, 1, C.OR);
-
-  drawHead(ctx);
-}
-
-// ── idle sleep ────────────────────────────────────────────────────
-function drawSleep(ctx: Ctx) {
-  ctx.clearRect(0, 0, CW_PX, CH_PX);
-
-  fill(ctx, 2, 11, 10, 1, C.SH);
-
-  // Curled low blob
-  fill(ctx, 2, 6, 11, 5, C.BK);
-  fill(ctx, 3, 7, 9, 3, C.OR);
-  fill(ctx, 4, 8, 6, 2, C.CR);
-
-  // Curled tail tip tucked beside the body
-  fill(ctx, 0, 7, 2, 2, C.BK); fill(ctx, 1, 8, 1, 1, C.OR);
-
-  // Tiny ear bumps
-  fill(ctx, 5, 6, 1, 1, C.BK);
-  fill(ctx, 8, 6, 1, 1, C.BK);
-
-  // Closed eye (dash)
-  fill(ctx, 6, 8, 2, 1, C.BK);
-
-  // Sleeping nose
-  fill(ctx, 9, 8, 1, 1, C.PK);
-
-  // Z z
-  fill(ctx, 12, 3, 1, 1, C.OR);
-  fill(ctx, 13, 2, 1, 1, C.LO);
-}
-
-// ── idle lick ────────────────────────────────────────────────────
-function drawLick(ctx: Ctx, frame: number) {
-  drawSit(ctx);
-  if (frame === 0) {
-    fill(ctx, 2, 7, 1, 2, C.BK); fill(ctx, 2, 7, 1, 1, C.OR);
-  } else {
-    fill(ctx, 2, 5, 1, 3, C.BK); fill(ctx, 2, 5, 1, 2, C.OR);
-  }
-}
-
-// ── bump (hits wall) ─────────────────────────────────────────────
-function drawBump(ctx: Ctx, dir: 1 | -1) {
-  ctx.clearRect(0, 0, CW_PX, CH_PX);
-  if (dir === -1) { ctx.save(); ctx.translate(CW_PX, 0); ctx.scale(-1, 1); }
-
-  drawShadow(ctx);
-  fill(ctx, 1, 3, 1, 3, C.BK); fill(ctx, 1, 4, 1, 1, C.OR);
-  fill(ctx, 0, 2, 2, 2, C.BK); fill(ctx, 0, 3, 1, 1, C.OR);
-  drawTorso(ctx);
-  drawHead(ctx);
-  fill(ctx, 3, 9, 1, 2, C.BK); fill(ctx, 3, 9, 1, 1, C.OR);
-  fill(ctx, 8, 9, 1, 2, C.BK); fill(ctx, 8, 9, 1, 1, C.OR);
-
-  // ? mark above head
-  fill(ctx, 13, 0, 1, 1, C.LO);
-  fill(ctx, 14, 0, 1, 1, C.LO);
-
-  if (dir === -1) ctx.restore();
-}
-
-// ── poke (jump up) ────────────────────────────────────────────────
-function drawPoke(ctx: Ctx, dir: 1 | -1) {
-  ctx.clearRect(0, 0, CW_PX, CH_PX);
-  ctx.save();
-  ctx.translate(0, -P * 2);
-  if (dir === -1) { ctx.translate(CW_PX, 0); ctx.scale(-1, 1); }
-
-  drawShadow(ctx);
-  fill(ctx, 1, 3, 1, 3, C.BK); fill(ctx, 1, 4, 1, 1, C.OR);
-  drawTorso(ctx);
-  drawHead(ctx);
-  // Legs tucked
-  fill(ctx, 4, 9, 1, 1, C.BK); fill(ctx, 4, 9, 1, 1, C.OR);
-  fill(ctx, 7, 9, 1, 1, C.BK); fill(ctx, 7, 9, 1, 1, C.OR);
-  // !! above
-  fill(ctx, 10, 0, 1, 2, C.LO);
-  fill(ctx, 12, 0, 1, 2, C.LO);
-
-  ctx.restore();
-}
-
-// ── hold (scroll wobble) ──────────────────────────────────────────
-function drawHold(ctx: Ctx, frame: number) {
-  ctx.clearRect(0, 0, CW_PX, CH_PX);
-  const angle = frame === 0 ? -0.12 : 0.12;
-  ctx.save();
-  ctx.translate(CW_PX / 2, CH_PX / 2);
-  ctx.rotate(angle);
-  ctx.translate(-CW_PX / 2, -CH_PX / 2);
-
-  drawShadow(ctx);
-  fill(ctx, 1, 3, 1, 3, C.BK); fill(ctx, 1, 4, 1, 1, C.OR);
-  drawTorso(ctx);
-  drawHead(ctx);
-  fill(ctx, 2, 9, 1, 2, C.BK); fill(ctx, 2, 9, 1, 1, C.OR);
-  fill(ctx, 9, 9, 1, 2, C.BK); fill(ctx, 9, 9, 1, 1, C.OR);
-
-  ctx.restore();
+function drawMark(ctx: Ctx, glyph: "?" | "!!") {
+  ctx.fillStyle = ACCENT;
+  ctx.font = "bold 13px monospace";
+  ctx.textAlign = "center";
+  ctx.fillText(glyph, CW_PX * 0.82, 12);
 }
 
 // ── Messages ─────────────────────────────────────────────────────
@@ -257,9 +84,29 @@ const IDLE_MSGS = [
   "i see u", "(ฅ^•ﻌ•^)ฅ", "^._.^", "feed me pls",
 ];
 
-const POKE_MSGS = ["hey!!", "ouch!", "( >ᴗ<)", "uwu", "hiss!", "mrow?", "!!"];
+const POKE_MSGS   = ["hey!!", "ouch!", "( >ᴗ<)", "uwu", "hiss!", "mrow?", "!!"];
+const ZOOM_MSGS   = ["wheee!!", "zoom zoom", "catch me!", "vroom", "can't stop!"];
+const NUZZLE_MSGS = ["hii <3", "pspsps back", "*nuzzle*", "hru?", "missed u"];
 
-type State = "walk" | "idle-sit" | "idle-lick" | "idle-sleep" | "sprint" | "bump" | "poke" | "hold";
+// ── behaviour states ────────────────────────────────────────────
+type State =
+  | "walk" | "sprint" | "bump" | "poke" | "hold" | "zoomies" | "nuzzle"
+  | "idle-sit" | "idle-lick" | "idle-sleep" | "idle-stretch"
+  | "idle-scratch" | "idle-yawn" | "idle-tailchase" | "idle-curious" | "idle-ball";
+
+// weighted idle pool — common cozy poses appear more often than playful ones
+const IDLE_POOL: { state: State; minDur: number; maxDur: number }[] = [
+  { state: "idle-sit",       minDur: 1800, maxDur: 3500 },
+  { state: "idle-sit",       minDur: 1800, maxDur: 3500 },
+  { state: "idle-lick",      minDur: 1800, maxDur: 3200 },
+  { state: "idle-sleep",     minDur: 2500, maxDur: 5000 },
+  { state: "idle-stretch",   minDur: 1400, maxDur: 2000 },
+  { state: "idle-scratch",   minDur: 1200, maxDur: 1800 },
+  { state: "idle-yawn",      minDur: 1400, maxDur: 2000 },
+  { state: "idle-tailchase", minDur: 1600, maxDur: 2400 },
+  { state: "idle-curious",   minDur: 1200, maxDur: 2000 },
+  { state: "idle-ball",      minDur: 2200, maxDur: 3800 },
+];
 
 // ── Component ────────────────────────────────────────────────────
 
@@ -279,6 +126,7 @@ export default function NavCat() {
   const rafRef      = useRef<number>(0);
   const lastScrollY = useRef(0);
   const pokeQueue   = useRef(false);
+  const lastNuzzle  = useRef(0);
 
   const [bubble, setBubble] = useState<string | null>(null);
   const [tip, setTip]       = useState(false);
@@ -300,27 +148,54 @@ export default function NavCat() {
     const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
     if (!ctx) return;
 
+    const img = new window.Image();
+    img.src = SHEET_SRC;
+
     let lastTime = 0;
 
     function loop(t: number) {
-      const state    = stateRef.current;
-      const dir      = dirRef.current;
-      const interval = state === "sprint" ? 90 : state === "idle-sleep" ? 600 : 200;
+      if (!img.complete || img.naturalWidth === 0) {
+        rafRef.current = requestAnimationFrame(loop);
+        return;
+      }
+
+      const state = stateRef.current;
+      const dir   = dirRef.current;
+      const interval =
+        state === "sprint" || state === "zoomies" ? 85 :
+        state === "idle-tailchase" ? 120 :
+        state === "idle-scratch"   ? 140 :
+        state === "idle-sleep"     ? 500 :
+        180;
 
       if (t - lastTime > interval) {
         lastTime = t;
-        frameRef.current = (frameRef.current + 1) % 2;
+        frameRef.current += 1;
         const f = frameRef.current;
 
         switch (state) {
-          case "walk":       drawWalk(ctx, f, dir);   break;
-          case "sprint":     drawSprint(ctx, f, dir); break;
-          case "idle-sit":   drawSit(ctx);             break;
-          case "idle-sleep": drawSleep(ctx);            break;
-          case "idle-lick":  drawLick(ctx, f);         break;
-          case "bump":       drawBump(ctx, dir);        break;
-          case "poke":       drawPoke(ctx, dir);        break;
-          case "hold":       drawHold(ctx, f);          break;
+          case "walk":            drawFrame(ctx, img, "walk", f, dir);        break;
+          case "sprint":           drawFrame(ctx, img, "sprint", f, dir);      break;
+          case "zoomies":          drawFrame(ctx, img, "zoomies", f, dir);     break;
+          case "idle-sit":         drawFrame(ctx, img, "sitBlink", f % 6 === 0 ? 1 : 0, 1); break;
+          case "idle-sleep":       drawFrame(ctx, img, "sleep", f, 1);         break;
+          case "idle-lick":        drawFrame(ctx, img, "sniffLick", f, 1);     break;
+          case "idle-stretch":     drawFrame(ctx, img, "stretch", f, 1);       break;
+          case "idle-scratch":     drawFrame(ctx, img, "scratch", f, 1);       break;
+          case "idle-yawn":        drawFrame(ctx, img, "yawn", f, 1);          break;
+          case "idle-tailchase":   drawFrame(ctx, img, "tailChase", f, 1);     break;
+          case "idle-curious":     drawFrame(ctx, img, "curious", f, 1);       break;
+          case "idle-ball":        drawFrame(ctx, img, "playBall", f, dir);    break;
+          case "nuzzle":           drawFrame(ctx, img, "nuzzle", f, 1);        break;
+          case "bump":
+            drawFrame(ctx, img, "alert", 1, dir);
+            drawMark(ctx, "?");
+            break;
+          case "poke":
+            drawFrame(ctx, img, "pounce", f, dir);
+            drawMark(ctx, "!!");
+            break;
+          case "hold":              drawFrame(ctx, img, "wobble", f, 1);       break;
         }
       }
 
@@ -368,19 +243,36 @@ export default function NavCat() {
       stateRef.current = "bump";
       setTimeout(() => {
         dirRef.current = dirRef.current === 1 ? -1 : 1;
-        if (Math.random() < 0.35) doIdle();
-        else walk();
+        const roll = Math.random();
+        if      (roll < 0.10) doZoomies();
+        else if (roll < 0.45) doIdle();
+        else                  walk();
       }, 800);
     }
 
     function doIdle() {
       stopAll();
-      const pick = Math.random();
-      if      (pick < 0.33) stateRef.current = "idle-sit";
-      else if (pick < 0.66) stateRef.current = "idle-lick";
-      else                  stateRef.current = "idle-sleep";
-      const dur = 1800 + Math.random() * 3000;
+      const pick = IDLE_POOL[Math.floor(Math.random() * IDLE_POOL.length)];
+      stateRef.current = pick.state;
+      const dur = pick.minDur + Math.random() * (pick.maxDur - pick.minDur);
       idleTimer.current = setTimeout(() => { stateRef.current = "walk"; walk(); }, dur);
+    }
+
+    function doZoomies() {
+      stopAll();
+      const { min, max } = bounds();
+      const target = min + Math.random() * (max - min);
+      dirRef.current   = target > xRef.current ? 1 : -1;
+      stateRef.current = "zoomies";
+      say(ZOOM_MSGS[Math.floor(Math.random() * ZOOM_MSGS.length)], 1800);
+      const dist = Math.abs(target - xRef.current);
+      gsapRef.current = gsap.to(xRef, {
+        current: target,
+        duration: Math.max(0.3, dist / ZOOMIES_SPD),
+        ease: "power1.inOut",
+        onUpdate: updatePos,
+        onComplete: () => { stateRef.current = "walk"; walk(); },
+      });
     }
 
     function sprintTo(targetX: number, onDone?: () => void) {
@@ -449,7 +341,7 @@ export default function NavCat() {
       l.addEventListener("mouseleave", onLinkLeave);
     });
 
-    (wrap as HTMLDivElement & { __catSprint?: typeof sprintTo; __catWalk?: typeof walk })
+    (wrap as HTMLDivElement & { __catSprint?: typeof sprintTo; __catWalk?: typeof walk; __catNuzzle?: typeof doIdle })
       .__catSprint = sprintTo;
     (wrap as HTMLDivElement & { __catWalk?: typeof walk }).__catWalk = walk;
 
@@ -495,6 +387,28 @@ export default function NavCat() {
     }, 350);
   }
 
+  // ── Gentle hover → nuzzle reaction ─────────────────────────────
+  function handleHoverEnter() {
+    setTip(true);
+    const now = Date.now();
+    const idleStates: State[] = [
+      "idle-sit", "idle-lick", "idle-sleep", "idle-stretch",
+      "idle-scratch", "idle-yawn", "idle-tailchase", "idle-curious", "idle-ball",
+    ];
+    if (
+      now - lastNuzzle.current > NUZZLE_COOLDOWN_MS &&
+      idleStates.includes(stateRef.current) &&
+      !pokeQueue.current
+    ) {
+      lastNuzzle.current = now;
+      gsapRef.current?.kill();
+      if (idleTimer.current) clearTimeout(idleTimer.current);
+      stateRef.current = "nuzzle";
+      say(NUZZLE_MSGS[Math.floor(Math.random() * NUZZLE_MSGS.length)], 2000);
+      idleTimer.current = setTimeout(() => { stateRef.current = "idle-sit"; }, 1400);
+    }
+  }
+
   // ── Render ────────────────────────────────────────────────────
   return (
     <div
@@ -506,7 +420,7 @@ export default function NavCat() {
         ref={containerRef}
         style={{ position: "absolute", bottom: 0, left: 0, width: CW_PX, pointerEvents: "all", cursor: "pointer", userSelect: "none" }}
         onClick={handlePoke}
-        onMouseEnter={() => setTip(true)}
+        onMouseEnter={handleHoverEnter}
         onMouseLeave={() => setTip(false)}
       >
         {tip && (
