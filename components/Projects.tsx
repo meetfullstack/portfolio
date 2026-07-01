@@ -37,7 +37,7 @@ function ProjectCard({ project }: { project: ProjectDetail }) {
         ) : (
           <div style={{ width: "100%", aspectRatio: "16/10", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.7rem", color: "rgba(168,85,247,0.3)", letterSpacing: "0.15em" }}>
-              // no preview yet
+              {"// no preview yet"}
             </span>
           </div>
         )}
