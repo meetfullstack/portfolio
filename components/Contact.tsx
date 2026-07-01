@@ -11,13 +11,7 @@ gsap.registerPlugin(ScrollTrigger);
 
 const initialState = { success: false, error: null };
 
-const inputClass =
-  "w-full rounded-xl px-4 py-3 text-sm outline-none transition-all focus:ring-1 focus:ring-purple-500";
-const inputStyle = {
-  background: "var(--bg-primary)",
-  border: "1px solid var(--border)",
-  color: "var(--text-primary)",
-};
+const inputClass = "input-field";
 
 export default function Contact() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -138,17 +132,17 @@ export default function Contact() {
 
             <div className="flex flex-col gap-2">
               <label htmlFor="name" className="section-tag">name</label>
-              <input id="name" name="name" type="text" required className={inputClass} style={inputStyle} />
+              <input id="name" name="name" type="text" required className={inputClass} />
             </div>
 
             <div className="flex flex-col gap-2">
               <label htmlFor="email" className="section-tag">email</label>
-              <input id="email" name="email" type="email" required className={inputClass} style={inputStyle} />
+              <input id="email" name="email" type="email" required className={inputClass} />
             </div>
 
             <div className="flex flex-col gap-2">
               <label htmlFor="message" className="section-tag">message</label>
-              <textarea id="message" name="message" rows={5} required minLength={10} className={inputClass} style={inputStyle} />
+              <textarea id="message" name="message" rows={5} required minLength={10} className={inputClass} />
             </div>
 
             <button
