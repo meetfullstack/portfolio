@@ -4,7 +4,6 @@ import { useRef } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import Link from "next/link";
-import NavCat from "@/components/NavCat";
 
 const links = [
   { href: "/#about", label: "About" },
@@ -237,7 +236,6 @@ export default function Nav() {
           ))}
         </nav>
       </div>
-      <NavCat />
     </header>
   );
 }
