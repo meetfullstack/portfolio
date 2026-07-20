@@ -4,6 +4,7 @@ import { useRef, useEffect } from "react";
 import gsap from "gsap";
 import MatrixRain from "@/components/MatrixRain";
 import About from "@/components/About";
+import Experience from "@/components/Experience";
 import Projects from "@/components/Projects";
 import Contact from "@/components/Contact";
 import SectionDivider from "@/components/SectionDivider";
@@ -98,16 +99,17 @@ export default function Home() {
         <MatrixRain />
         <section
           ref={heroRef}
-          className="container relative z-10 grid min-h-[92vh] items-center gap-12 lg:grid-cols-[1fr_338px]"
+          className="container relative z-10 grid items-center gap-12 lg:grid-cols-[1fr_338px]"
+          style={{ minHeight: "var(--section-min-h)" }}
         >
-          <div className="flex flex-col min-w-0">
+          <div className="flex flex-col min-w-0 order-2 lg:order-1">
             <p className="hero-tag section-tag mb-6">
               {"// hello.world"} — available for work
             </p>
 
             <h1
               className="hero-heading font-bold tracking-tight"
-              style={{ fontSize: "clamp(2.5rem, 4vw, 3.5rem)", lineHeight: 1.2 }}
+              style={{ fontSize: "clamp(1.5rem, 6vw, 3.5rem)", lineHeight: 1.2 }}
             >
               <span style={{ display: "block" }}>Hello, I&apos;m Meet —</span>
               <span style={{ display: "block", minHeight: "1.2em" }}>
@@ -139,7 +141,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="hero-image relative z-10 hidden lg:flex lg:justify-end">
+          <div className="hero-image relative z-10 min-w-0 flex justify-center order-1 lg:order-2 lg:justify-end">
             <div className="hero-photo-frame">
               <div className="photo-reveal" style={{ position: "absolute", inset: 0 }}>
                 <Image
@@ -148,7 +150,7 @@ export default function Home() {
                   fill
                   priority
                   className="object-cover"
-                  sizes="(max-width:1024px) 0px, 338px"
+                  sizes="(max-width:1024px) 90vw, 338px"
                 />
               </div>
               <div className="photo-trail" style={{ position: "absolute", left: 0, right: 0, top: 0, height: 30, zIndex: 2, pointerEvents: "none", willChange: "transform" }} />
@@ -161,8 +163,8 @@ export default function Home() {
         </section>
       </div>
 
-      <SectionDivider />
       <About />
+      <Experience />
       <SectionDivider />
       <Projects />
       <SectionDivider />

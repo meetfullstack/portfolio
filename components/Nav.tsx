@@ -1,12 +1,14 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import Link from "next/link";
 
 const links = [
+  { href: "/", label: "Home" },
   { href: "/#about", label: "About" },
+  { href: "/#experience", label: "Experience" },
   { href: "/#projects", label: "Projects" },
   { href: "/#contact", label: "Contact" },
 ];
@@ -28,6 +30,8 @@ export default function Nav() {
   const navRef = useRef<HTMLElement>(null);
   const logoRef = useRef<HTMLAnchorElement>(null);
   const logoLineRef = useRef<HTMLSpanElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useGSAP(
     () => {
@@ -46,6 +50,38 @@ export default function Nav() {
     },
     { scope: headerRef },
   );
+
+  useEffect(() => {
+    const overlay = overlayRef.current;
+    if (!overlay) return;
+
+    if (mobileOpen) {
+      document.body.style.overflow = "hidden";
+      gsap.set(overlay, { display: "flex" });
+      gsap.fromTo(
+        overlay,
+        { opacity: 0 },
+        { opacity: 1, duration: 0.25, ease: "power2.out" }
+      );
+      gsap.fromTo(
+        ".mobile-nav-link",
+        { opacity: 0, y: 16 },
+        { opacity: 1, y: 0, duration: 0.35, stagger: 0.05, ease: "power3.out", delay: 0.05 }
+      );
+    } else {
+      document.body.style.overflow = "";
+      gsap.to(overlay, {
+        opacity: 0,
+        duration: 0.2,
+        ease: "power2.in",
+        onComplete: () => gsap.set(overlay, { display: "none" }),
+      });
+    }
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileOpen]);
 
   function handleLogoEnter() {
     // color targets the <Link> — SVG inherits via currentColor, text also shifts
@@ -76,6 +112,8 @@ export default function Nav() {
 
   function handleHashClick(e: React.MouseEvent<HTMLAnchorElement>) {
     const href = e.currentTarget.getAttribute("href") ?? "";
+    setMobileOpen(false);
+    if (!href.startsWith("/#") && !href.startsWith("#")) return;
     // href is "/#section" — extract the hash and smooth-scroll only if on home page
     const hash = href.startsWith("/#") ? href.slice(1) : href;
     const target = document.querySelector(hash);
@@ -112,6 +150,7 @@ export default function Nav() {
 
 
   return (
+    <>
     <header
       ref={headerRef}
       className="nav-header fixed top-0 left-0 right-0 z-50"
@@ -119,7 +158,7 @@ export default function Nav() {
     >
       <div
         className="flex items-center justify-between"
-        style={{ maxWidth: 1200, margin: "0 auto", padding: "20px 48px" }}
+        style={{ maxWidth: 1200, margin: "0 auto", padding: "20px 24px" }}
       >
         {/* Logo: geometric M mark + meet.dev text, codedgar-style */}
         <Link
@@ -127,7 +166,7 @@ export default function Nav() {
           href="/"
           onMouseEnter={handleLogoEnter}
           onMouseLeave={handleLogoLeave}
-          onClick={() => { if (window.location.pathname === "/") window.scrollTo({ top: 0, behavior: "smooth" }); }}
+          onClick={() => { setMobileOpen(false); if (window.location.pathname === "/") window.scrollTo({ top: 0, behavior: "smooth" }); }}
           style={{
             display: "inline-flex",
             alignItems: "center",
@@ -186,9 +225,10 @@ export default function Nav() {
           </span>
         </Link>
 
+        {/* Desktop nav — hidden below sm breakpoint */}
         <nav
           ref={navRef}
-          className="relative flex items-center gap-1"
+          className="relative hidden sm:flex items-center gap-1"
         >
           {/* shared sliding bubble */}
           <div
@@ -235,7 +275,108 @@ export default function Nav() {
             </a>
           ))}
         </nav>
+
+        {/* Mobile hamburger — visible below sm breakpoint */}
+        <button
+          type="button"
+          aria-label={mobileOpen ? "Close navigation menu" : "Open navigation menu"}
+          aria-expanded={mobileOpen}
+          onClick={() => setMobileOpen((v) => !v)}
+          className="flex sm:hidden"
+          style={{
+            position: "relative",
+            width: 40,
+            height: 40,
+            alignItems: "center",
+            justifyContent: "center",
+            borderRadius: 999,
+            ...bubbleGlass,
+          }}
+        >
+          <span style={{ position: "relative", width: 18, height: 12 }}>
+            <span
+              style={{
+                position: "absolute",
+                left: 0,
+                right: 0,
+                height: 1.5,
+                background: "var(--text-primary)",
+                borderRadius: 999,
+                top: mobileOpen ? "50%" : 0,
+                transform: mobileOpen ? "translateY(-50%) rotate(45deg)" : "none",
+                transition: "all 0.25s ease",
+              }}
+            />
+            <span
+              style={{
+                position: "absolute",
+                left: 0,
+                right: 0,
+                height: 1.5,
+                background: "var(--text-primary)",
+                borderRadius: 999,
+                top: "50%",
+                transform: "translateY(-50%)",
+                opacity: mobileOpen ? 0 : 1,
+                transition: "opacity 0.2s ease",
+              }}
+            />
+            <span
+              style={{
+                position: "absolute",
+                left: 0,
+                right: 0,
+                height: 1.5,
+                background: "var(--text-primary)",
+                borderRadius: 999,
+                bottom: mobileOpen ? "50%" : 0,
+                transform: mobileOpen ? "translateY(50%) rotate(-45deg)" : "none",
+                transition: "all 0.25s ease",
+              }}
+            />
+          </span>
+        </button>
       </div>
     </header>
+
+    {/* Mobile overlay menu — rendered outside <header> so its "fixed" isn't
+        trapped by the header's own GSAP transform (which creates a new
+        containing block for fixed descendants). */}
+    <div
+      ref={overlayRef}
+      style={{
+        display: "none",
+        position: "fixed",
+        inset: 0,
+        zIndex: 60,
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: "1.5rem",
+        background: "rgba(0,0,0,0.85)",
+        backdropFilter: "blur(20px)",
+        WebkitBackdropFilter: "blur(20px)",
+      }}
+    >
+      {links.map((link) => (
+        <a
+          key={link.href}
+          href={link.href}
+          onClick={handleHashClick}
+          className="mobile-nav-link"
+          style={{
+            fontFamily: "var(--font-mono)",
+            fontSize: "1.5rem",
+            fontWeight: 500,
+            letterSpacing: "0.03em",
+            color: "var(--text-primary)",
+            textDecoration: "none",
+          }}
+        >
+          {link.label}
+        </a>
+      ))}
+    </div>
+    </>
   );
 }

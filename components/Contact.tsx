@@ -67,6 +67,7 @@ export default function Contact() {
     return (
       <section
         id="contact"
+        className="section-box"
         style={{
           paddingTop: "var(--section-gap)",
           paddingBottom: "var(--section-gap)",
@@ -89,6 +90,7 @@ export default function Contact() {
     <section
       ref={sectionRef}
       id="contact"
+      className="section-box"
       style={{
         paddingTop: "var(--section-gap)",
         paddingBottom: "var(--section-gap)",
@@ -97,7 +99,7 @@ export default function Contact() {
       <div className="container">
         <div className="relative flex items-start justify-between">
           <div>
-            <p className="contact-tag section-tag mb-3">03 // contact.me</p>
+            <p className="contact-tag section-tag mb-3">04 // contact.me</p>
             <h2 className="text-4xl font-bold tracking-tight sm:text-5xl">
               {"Get in touch".split(" ").map((word) => (
                 <span key={word} style={{ display: "inline-block", overflow: "hidden", marginRight: "0.3em" }}>
@@ -107,7 +109,7 @@ export default function Contact() {
             </h2>
           </div>
           <span aria-hidden="true" className="contact-tag section-number">
-            03
+            4
           </span>
         </div>
 

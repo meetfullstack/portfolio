@@ -239,7 +239,7 @@ export default function ProjectPage() {
         }}
       >
         <div className="container">
-          <div style={{ display: "grid", gridTemplateColumns: "260px 1fr", gap: "4rem" }}>
+          <div className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-8 md:gap-16">
 
             {/* Sidebar */}
             <aside className="ph-sidebar" style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>

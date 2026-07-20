@@ -207,6 +207,7 @@ export default function Projects() {
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       onMouseEnter={handleMouseEnterSection}
+      className="section-box"
       style={{ paddingTop: "var(--section-gap)", paddingBottom: "var(--section-gap)", position: "relative", overflow: "hidden" }}
     >
       {/* Base dot grid — dim, always visible */}
@@ -247,7 +248,7 @@ export default function Projects() {
       <div className="container" style={{ position: "relative", zIndex: 1 }}>
         <div className="relative flex items-start justify-between">
           <div>
-            <p className="projects-tag section-tag mb-3">02 // projects.work</p>
+            <p className="projects-tag section-tag mb-3">03 // projects.work</p>
             <h2 className="text-4xl font-bold tracking-tight sm:text-5xl">
               {"Things I have built".split(" ").map((word) => (
                 <span key={word} style={{ display: "inline-block", overflow: "hidden", marginRight: "0.3em" }}>
@@ -256,7 +257,7 @@ export default function Projects() {
               ))}
             </h2>
           </div>
-          <span aria-hidden="true" className="projects-tag section-number">02</span>
+          <span aria-hidden="true" className="projects-tag section-number">3</span>
         </div>
 
         <div className="mt-12" style={{
