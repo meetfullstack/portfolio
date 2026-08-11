@@ -1,36 +1,61 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Meet Upadhyay — Portfolio
 
-## Getting Started
+Personal portfolio site for Meet Upadhyay, a full-stack developer. Built as a
+single-page scrolling site (Hero, About, Experience, Projects, Contact) with
+GSAP-driven scroll animations, plus separate case-study pages per project.
 
-First, run the development server:
+## Tech stack
+
+- [Next.js 16](https://nextjs.org) (App Router) + React 19 + TypeScript
+- [Tailwind CSS 4](https://tailwindcss.com)
+- [GSAP](https://gsap.com) + [@gsap/react](https://gsap.com/resources/React) for scroll-triggered animation
+- [Lenis](https://lenis.darkroom.engineering) for smooth scrolling
+- [next-view-transitions](https://github.com/shuding/next-view-transitions) for page transitions
+- [next-themes](https://github.com/pacocoursey/next-themes) for light/dark mode
+- [Resend](https://resend.com) + [Zod](https://zod.dev) for the contact form
+
+## Getting started
+
+Install dependencies and run the dev server:
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to view it.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Environment variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The contact form (`app/actions/contact.ts`) requires a [Resend](https://resend.com)
+API key to send email. Copy `.env.example` to `.env.local` and fill in real
+values:
 
-## Learn More
+```bash
+cp .env.example .env.local
+```
 
-To learn more about Next.js, take a look at the following resources:
+| Variable | Required | Description |
+| --- | --- | --- |
+| `RESEND_API_KEY` | Yes | API key from your Resend dashboard |
+| `RESEND_FROM_EMAIL` | No | Verified sender address; falls back to Resend's shared `onboarding@resend.dev` if unset |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Without `RESEND_API_KEY`, the site still runs — only the contact form's send
+action will fail.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Scripts
 
-## Deploy on Vercel
+```bash
+npm run dev     # start the dev server
+npm run build   # production build
+npm run start   # run the production build locally
+npm run lint    # run ESLint
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Project structure
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `app/page.tsx` — the single-page home route; stacks Hero + all sections
+- `components/` — section components (`About`, `Experience`, `Projects`, `Contact`, `Nav`, `Footer`, …)
+- `app/projects/[slug]/` — individual project case-study pages
+- `lib/projects.ts` — project case-study content/data
+- `app/actions/contact.ts` — server action handling the contact form (validation, honeypot, rate limiting, email send)

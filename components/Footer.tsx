@@ -35,7 +35,7 @@ export default function Footer() {
             GitHub
           </a>
           <a
-            href="https://linkedin.com/in/your-handle"
+            href="https://www.linkedin.com/in/meetupadhy"
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm transition-colors hover:text-purple-400"
@@ -44,7 +44,7 @@ export default function Footer() {
             LinkedIn
           </a>
           <a
-            href="mailto:you@example.com"
+            href="mailto:meetupadhyay158@gmail.com"
             className="text-sm transition-colors hover:text-purple-400"
             style={{ color: "var(--text-secondary)" }}
           >

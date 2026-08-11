@@ -11,8 +11,12 @@ export default function SmoothScroll() {
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
 
+    // Respect the OS-level reduced-motion preference — momentum easing is
+    // exactly the kind of motion that can trigger vestibular discomfort.
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
     const lenis = new Lenis({
-      duration: 1.15,
+      duration: prefersReducedMotion ? 0 : 1.15,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       // Let Lenis intercept #anchor clicks (nav + hero CTAs) and glide to them.
       anchors: { offset: -80 },

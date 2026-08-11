@@ -99,8 +99,7 @@ export default function Home() {
         <MatrixRain />
         <section
           ref={heroRef}
-          className="container relative z-10 grid items-center gap-12 lg:grid-cols-[1fr_338px]"
-          style={{ minHeight: "var(--section-min-h)" }}
+          className="section container relative z-10 grid items-center gap-12 lg:grid-cols-[1fr_338px]"
         >
           <div className="flex flex-col min-w-0 order-2 lg:order-1">
             <p className="hero-tag section-tag mb-6">
@@ -156,7 +155,16 @@ export default function Home() {
               <div className="photo-trail" style={{ position: "absolute", left: 0, right: 0, top: 0, height: 30, zIndex: 2, pointerEvents: "none", willChange: "transform" }} />
               {/* Blurred overlay — clips away upward as sharp photo reveals below */}
               <div className="ascii-overlay" style={{ position: "absolute", inset: 0, zIndex: 3, pointerEvents: "none", overflow: "hidden" }}>
-                <Image src="/profile.jpg" alt="" fill className="object-cover" sizes="338px" style={{ filter: "blur(14px)", transform: "scale(1.05)" }} />
+                <Image
+                  src="/profile.jpg"
+                  alt=""
+                  aria-hidden="true"
+                  fill
+                  priority
+                  className="object-cover"
+                  sizes="(max-width:1024px) 90vw, 338px"
+                  style={{ filter: "blur(14px)", transform: "scale(1.05)" }}
+                />
               </div>
             </div>
           </div>

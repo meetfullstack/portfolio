@@ -65,14 +65,7 @@ export default function Contact() {
 
   if (state.success) {
     return (
-      <section
-        id="contact"
-        className="section-box"
-        style={{
-          paddingTop: "var(--section-gap)",
-          paddingBottom: "var(--section-gap)",
-        }}
-      >
+      <section id="contact" className="section">
         <div className="container">
           <div className="card max-w-xl p-10 text-center">
             <p className="accent-text text-5xl font-bold">✓</p>
@@ -87,34 +80,24 @@ export default function Contact() {
   }
 
   return (
-    <section
-      ref={sectionRef}
-      id="contact"
-      className="section-box"
-      style={{
-        paddingTop: "var(--section-gap)",
-        paddingBottom: "var(--section-gap)",
-      }}
-    >
-      <div className="container">
-        <div className="relative flex items-start justify-between">
-          <div>
-            <p className="contact-tag section-tag mb-3">04 // contact.me</p>
-            <h2 className="text-4xl font-bold tracking-tight sm:text-5xl">
-              {"Get in touch".split(" ").map((word) => (
-                <span key={word} style={{ display: "inline-block", overflow: "hidden", marginRight: "0.3em" }}>
-                  <span className="contact-word" style={{ display: "inline-block" }}>{word}</span>
-                </span>
-              ))}
-            </h2>
-          </div>
-          <span aria-hidden="true" className="contact-tag section-number">
-            4
-          </span>
+    <section ref={sectionRef} id="contact" className="section">
+      <div className="container relative">
+        <span aria-hidden="true" className="contact-tag section-number">
+          4
+        </span>
+        <div className="section-header relative">
+          <p className="contact-tag section-tag mb-3">04 // contact.me</p>
+          <h2 className="text-4xl font-bold tracking-tight sm:text-5xl">
+            {"Get in touch".split(" ").map((word) => (
+              <span key={word} style={{ display: "inline-block", overflow: "hidden", marginRight: "0.3em" }}>
+                <span className="contact-word" style={{ display: "inline-block" }}>{word}</span>
+              </span>
+            ))}
+          </h2>
         </div>
 
         <p
-          className="contact-subtext mt-4 max-w-lg text-base leading-relaxed"
+          className="contact-subtext max-w-lg text-base leading-relaxed"
           style={{ color: "var(--text-secondary)" }}
         >
           Open to software engineering and Data/AI roles in Toronto and remote.
@@ -125,6 +108,9 @@ export default function Contact() {
           <form action={formAction} className="flex flex-col gap-5">
             {state.error ? (
               <p
+                id="contact-form-error"
+                role="alert"
+                aria-live="polite"
                 className="rounded-xl px-4 py-3 text-sm"
                 style={{ background: "rgba(239,68,68,0.1)", color: "#f87171" }}
               >
@@ -132,19 +118,52 @@ export default function Contact() {
               </p>
             ) : null}
 
+            {/* Honeypot — hidden from sighted users, real browsers won't fill it, spam bots often do */}
+            <div style={{ position: "absolute", left: "-9999px", width: 1, height: 1, overflow: "hidden" }} aria-hidden="true">
+              <label htmlFor="website">Website</label>
+              <input id="website" name="website" type="text" tabIndex={-1} autoComplete="off" />
+            </div>
+
             <div className="flex flex-col gap-2">
               <label htmlFor="name" className="section-tag">name</label>
-              <input id="name" name="name" type="text" required className={inputClass} />
+              <input
+                id="name"
+                name="name"
+                type="text"
+                required
+                maxLength={100}
+                autoComplete="name"
+                aria-describedby={state.error ? "contact-form-error" : undefined}
+                className={inputClass}
+              />
             </div>
 
             <div className="flex flex-col gap-2">
               <label htmlFor="email" className="section-tag">email</label>
-              <input id="email" name="email" type="email" required className={inputClass} />
+              <input
+                id="email"
+                name="email"
+                type="email"
+                required
+                maxLength={254}
+                autoComplete="email"
+                aria-describedby={state.error ? "contact-form-error" : undefined}
+                className={inputClass}
+              />
             </div>
 
             <div className="flex flex-col gap-2">
               <label htmlFor="message" className="section-tag">message</label>
-              <textarea id="message" name="message" rows={5} required minLength={10} className={inputClass} />
+              <textarea
+                id="message"
+                name="message"
+                rows={5}
+                required
+                minLength={10}
+                maxLength={5000}
+                aria-describedby={state.error ? "contact-form-error" : undefined}
+                className={inputClass}
+              />
             </div>
 
             <button

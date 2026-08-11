@@ -5,6 +5,7 @@ import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Link } from "next-view-transitions";
+import Image from "next/image";
 import { projects } from "@/lib/projects";
 import type { ProjectDetail } from "@/lib/projects";
 
@@ -26,13 +27,15 @@ function ProjectCard({ project }: { project: ProjectDetail }) {
       }}
     >
       {/* Image area */}
-      <div className="work-card-image" style={{ position: "relative", overflow: "hidden", background: "#0d0d0d", viewTransitionName: `project-img-${project.slug}` }}>
+      <div className="work-card-image" style={{ position: "relative", overflow: "hidden", background: "#0d0d0d", aspectRatio: "16/10", viewTransitionName: `project-img-${project.slug}` }}>
         {project.image ? (
-          <img
+          <Image
             src={project.image}
             alt={project.title}
+            fill
             className="work-card-img"
-            style={{ width: "100%", aspectRatio: "16/10", objectFit: "contain", display: "block", transition: "transform 0.6s ease" }}
+            sizes="(max-width: 640px) 100vw, 50vw"
+            style={{ objectFit: "contain", transition: "transform 0.6s ease" }}
           />
         ) : (
           <div style={{ width: "100%", aspectRatio: "16/10", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -207,8 +210,8 @@ export default function Projects() {
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       onMouseEnter={handleMouseEnterSection}
-      className="section-box"
-      style={{ paddingTop: "var(--section-gap)", paddingBottom: "var(--section-gap)", position: "relative", overflow: "hidden" }}
+      className="section"
+      style={{ position: "relative", overflow: "hidden" }}
     >
       {/* Base dot grid — dim, always visible */}
       <div aria-hidden="true" style={{
@@ -245,22 +248,20 @@ export default function Projects() {
         .work-card-custom:hover .work-card-overlay { opacity: 1 !important; }
       `}</style>
 
-      <div className="container" style={{ position: "relative", zIndex: 1 }}>
-        <div className="relative flex items-start justify-between">
-          <div>
-            <p className="projects-tag section-tag mb-3">03 // projects.work</p>
-            <h2 className="text-4xl font-bold tracking-tight sm:text-5xl">
-              {"Things I have built".split(" ").map((word) => (
-                <span key={word} style={{ display: "inline-block", overflow: "hidden", marginRight: "0.3em" }}>
-                  <span className="projects-word" style={{ display: "inline-block" }}>{word}</span>
-                </span>
-              ))}
-            </h2>
-          </div>
-          <span aria-hidden="true" className="projects-tag section-number">3</span>
+      <div className="container relative" style={{ zIndex: 1 }}>
+        <span aria-hidden="true" className="projects-tag section-number">3</span>
+        <div className="section-header relative">
+          <p className="projects-tag section-tag mb-3">03 // projects.work</p>
+          <h2 className="text-4xl font-bold tracking-tight sm:text-5xl">
+            {"Things I have built".split(" ").map((word) => (
+              <span key={word} style={{ display: "inline-block", overflow: "hidden", marginRight: "0.3em" }}>
+                <span className="projects-word" style={{ display: "inline-block" }}>{word}</span>
+              </span>
+            ))}
+          </h2>
         </div>
 
-        <div className="mt-12" style={{
+        <div style={{
           display: "grid",
           gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 300px), 1fr))",
           gap: "1.5rem",

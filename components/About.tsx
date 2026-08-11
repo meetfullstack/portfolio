@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -29,11 +29,6 @@ const education = [
     school: "Lambton College",
     period: "2024 — 2025",
   },
-  {
-    degree: "Your degree here",
-    school: "Your university here",
-    period: "20XX — 20XX",
-  },
 ];
 
 const slideCount = 4;
@@ -45,6 +40,15 @@ export default function About() {
   const pinRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const ringFillRef = useRef<SVGCircleElement>(null);
+  const [reducedMotion, setReducedMotion] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReducedMotion(mq.matches);
+    const onChange = () => setReducedMotion(mq.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
 
   useGSAP(
     () => {
@@ -58,6 +62,12 @@ export default function About() {
 
       tl.from(".about-tag", { opacity: 0, y: 20, duration: 0.5, ease: "power3.out" })
         .from(".about-word", { opacity: 0, y: "100%", duration: 0.5, stagger: 0.08, ease: "power3.out" }, "-=0.2");
+
+      // Users who prefer reduced motion get the slides stacked normally in
+      // the JSX below — skip the scroll-hijacking pin/horizontal-drag
+      // entirely rather than just speeding it up, since the disorientation
+      // comes from the unexpected scroll direction, not the animation speed.
+      if (reducedMotion) return;
 
       // Pin the ENTIRE box (top divider through bottom divider) once it's
       // centered in the viewport, then drag one full-width slide per "step"
@@ -105,7 +115,7 @@ export default function About() {
         );
       });
     },
-    { scope: sectionRef }
+    { scope: sectionRef, dependencies: [reducedMotion] }
   );
 
   function handleSkillEnter(e: React.MouseEvent<HTMLSpanElement>) {
@@ -121,26 +131,25 @@ export default function About() {
       <div
         ref={pinRef}
         className="relative overflow-hidden"
-        style={{ minHeight: "var(--section-min-h)", display: "flex", flexDirection: "column" }}
+        style={{ display: "flex", flexDirection: "column" }}
       >
         <SectionDivider />
 
         <div
+          className="section"
           style={{
             flex: 1,
             display: "flex",
             flexDirection: "column",
             justifyContent: "center",
-            paddingTop: "var(--section-gap)",
-            paddingBottom: "var(--section-gap)",
           }}
         >
           <div className="container relative">
-            <span aria-hidden="true" className="about-tag section-number" style={{ position: "absolute", top: 0, right: 0 }}>
+            <span aria-hidden="true" className="about-tag section-number">
               1
             </span>
 
-            <div className="relative flex items-center gap-4 mb-8">
+            <div className="section-header relative flex items-center gap-4">
               <div>
                 <p className="about-tag section-tag mb-3">01 // about.me</p>
                 <h2 className="text-4xl font-bold tracking-tight sm:text-5xl" style={{ overflow: "hidden" }}>
@@ -152,7 +161,8 @@ export default function About() {
                 </h2>
               </div>
 
-              {/* circular progress ring, right after the heading */}
+              {/* circular progress ring, right after the heading — only meaningful during the scroll-drag, hidden when that's skipped for reduced motion */}
+              {!reducedMotion && (
               <svg width="32" height="32" viewBox="0 0 32 32" style={{ transform: "rotate(-90deg)", flexShrink: 0 }}>
                 <circle cx="16" cy="16" r={RING_RADIUS} fill="none" stroke="rgba(168, 85, 247, 0.15)" strokeWidth="3" />
                 <circle
@@ -168,11 +178,16 @@ export default function About() {
                   strokeDashoffset={RING_CIRCUMFERENCE}
                 />
               </svg>
+              )}
             </div>
           </div>
 
-          <div ref={trackRef} className="flex" style={{ width: "max-content" }}>
-            <div className="about-slide flex-shrink-0" style={{ width: "100vw" }}>
+          <div
+            ref={trackRef}
+            className={reducedMotion ? "flex flex-col" : "flex"}
+            style={reducedMotion ? undefined : { width: "max-content" }}
+          >
+            <div className="about-slide flex-shrink-0" style={{ width: reducedMotion ? "100%" : "100vw" }}>
               <div className="container">
                 <div className="about-panel-reveal card p-8 md:p-12">
                   <p className="section-tag mb-4">background</p>
@@ -186,7 +201,7 @@ export default function About() {
               </div>
             </div>
 
-            <div className="about-slide flex-shrink-0" style={{ width: "100vw" }}>
+            <div className="about-slide flex-shrink-0" style={{ width: reducedMotion ? "100%" : "100vw" }}>
               <div className="container">
                 <div className="about-panel-reveal card p-8 md:p-12">
                   <p className="section-tag mb-4">focus</p>
@@ -199,7 +214,7 @@ export default function About() {
               </div>
             </div>
 
-            <div className="about-slide flex-shrink-0" style={{ width: "100vw" }}>
+            <div className="about-slide flex-shrink-0" style={{ width: reducedMotion ? "100%" : "100vw" }}>
               <div className="container">
                 <div className="about-panel-reveal card p-8 md:p-12">
                   <p className="section-tag mb-6">education</p>
@@ -230,7 +245,7 @@ export default function About() {
               </div>
             </div>
 
-            <div className="about-slide flex-shrink-0" style={{ width: "100vw" }}>
+            <div className="about-slide flex-shrink-0" style={{ width: reducedMotion ? "100%" : "100vw" }}>
               <div className="container">
                 <div className="about-panel-reveal card p-8 md:p-12">
                   <p className="section-tag mb-6">tech stack</p>

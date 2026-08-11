@@ -30,7 +30,7 @@ export default function Nav() {
   const navRef = useRef<HTMLElement>(null);
   const logoRef = useRef<HTMLAnchorElement>(null);
   const logoLineRef = useRef<HTMLSpanElement>(null);
-  const overlayRef = useRef<HTMLDivElement>(null);
+  const overlayRef = useRef<HTMLElement>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useGSAP(
@@ -158,7 +158,7 @@ export default function Nav() {
     >
       <div
         className="flex items-center justify-between"
-        style={{ maxWidth: 1200, margin: "0 auto", padding: "20px 24px" }}
+        style={{ padding: "20px 32px" }}
       >
         {/* Logo: geometric M mark + meet.dev text, codedgar-style */}
         <Link
@@ -228,6 +228,7 @@ export default function Nav() {
         {/* Desktop nav — hidden below sm breakpoint */}
         <nav
           ref={navRef}
+          aria-label="Main navigation"
           className="relative hidden sm:flex items-center gap-1"
         >
           {/* shared sliding bubble */}
@@ -342,8 +343,9 @@ export default function Nav() {
     {/* Mobile overlay menu — rendered outside <header> so its "fixed" isn't
         trapped by the header's own GSAP transform (which creates a new
         containing block for fixed descendants). */}
-    <div
+    <nav
       ref={overlayRef}
+      aria-label="Mobile navigation"
       style={{
         display: "none",
         position: "fixed",
@@ -376,7 +378,7 @@ export default function Nav() {
           {link.label}
         </a>
       ))}
-    </div>
+    </nav>
     </>
   );
 }
