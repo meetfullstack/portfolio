@@ -101,7 +101,12 @@ export default function Home() {
         aria-labelledby="hero-title"
         className="section relative overflow-hidden"
         style={{
-          paddingTop: "calc(var(--section-gap) + 42px)",
+          // codedgar's hero reserves 106px of its own top padding to clear
+          // its fixed nav (its <body> reserves 0). Ours already reserves
+          // 56px at the body level (see globals.css `body { padding-top }`)
+          // for every section, so matching 106px here would double-count
+          // the nav offset — only the remaining 50px belongs on the section.
+          paddingTop: "50px",
           paddingBottom: "calc(var(--section-gap) + 4rem)",
         }}
       >
