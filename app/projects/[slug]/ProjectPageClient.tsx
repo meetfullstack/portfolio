@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { notFound } from "next/navigation";
+import Image from "next/image";
 import { Link } from "next-view-transitions";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -206,10 +207,13 @@ export default function ProjectPageClient({ slug }: { slug: string }) {
             >
               {/* Sharp image — reveals upward */}
               <div className="pi-reveal" style={{ position: "relative", width: "100%" }}>
-                <img
+                <Image
                   src={project.image}
                   alt={project.title}
-                  style={{ width: "100%", display: "block" }}
+                  width={0}
+                  height={0}
+                  sizes="(max-width: 860px) 100vw, 860px"
+                  style={{ width: "100%", height: "auto", display: "block" }}
                 />
               </div>
               {/* Scanning trail */}
@@ -219,11 +223,20 @@ export default function ProjectPageClient({ slug }: { slug: string }) {
               }} />
               {/* Blurred overlay — clips away as sharp image reveals */}
               <div className="pi-blur" style={{ position: "absolute", inset: 0, zIndex: 3, pointerEvents: "none", overflow: "hidden" }}>
-                <img
+                <Image
                   src={project.image}
                   alt=""
                   aria-hidden="true"
-                  style={{ width: "100%", display: "block", filter: "blur(14px)", transform: "scale(1.05)" }}
+                  width={0}
+                  height={0}
+                  sizes="(max-width: 860px) 100vw, 860px"
+                  style={{
+                    width: "100%",
+                    height: "auto",
+                    display: "block",
+                    filter: "blur(14px)",
+                    transform: "scale(1.05)",
+                  }}
                 />
               </div>
             </div>

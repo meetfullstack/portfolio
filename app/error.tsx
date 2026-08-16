@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import CornerButton from "@/components/CornerButton";
 
 export default function Error({
   error,
