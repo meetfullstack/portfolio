@@ -113,8 +113,8 @@ export default function Home() {
         }}
       >
         <MatrixRain />
-        <div className="container relative z-10 grid items-center gap-12 lg:grid-cols-[1fr_338px]">
-          <div className="flex flex-col min-w-0 order-2 lg:order-1">
+        <div className="container relative z-10 grid items-center gap-[64px] min-[900px]:grid-cols-2 min-[1440px]:gap-[96px]">
+          <div className="flex flex-col min-w-0 order-2 min-[900px]:order-1">
             <p className="hero-tag section-tag mb-6">
               {"// hello.world"} — available for work
             </p>
@@ -154,7 +154,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="hero-image relative z-10 min-w-0 flex justify-center order-1 lg:order-2 lg:justify-end">
+          <div className="hero-image relative z-10 min-w-0 flex justify-center order-1 min-[900px]:order-2">
             <div className="hero-photo-frame">
               <div className="photo-reveal" style={{ position: "absolute", inset: 0 }}>
                 <Image
