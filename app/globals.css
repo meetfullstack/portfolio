@@ -168,6 +168,27 @@ body {
   text-transform: uppercase;
 }
 
+.hero-tag {
+  font-size: 1rem;
+}
+
+.hero-heading {
+  font-size: 1.75rem;
+  line-height: 1.2;
+}
+
+@media (min-width: 600px) {
+  .hero-heading {
+    font-size: 2.5rem;
+  }
+}
+
+@media (min-width: 1440px) {
+  .hero-heading {
+    font-size: 3.5rem;
+  }
+}
+
 .input-field {
   width: 100%;
   background: var(--bg-card);

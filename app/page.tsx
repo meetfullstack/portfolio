@@ -113,7 +113,6 @@ export default function Home() {
               id="hero-title"
               aria-label="Hello, I'm Meet — Full-Stack Developer"
               className="hero-heading font-bold tracking-tight"
-              style={{ fontSize: "clamp(1.5rem, 6vw, 3.5rem)", lineHeight: 1.2 }}
             >
               <span style={{ display: "block" }}>Hello, I&apos;m Meet —</span>
               <span style={{ display: "block", minHeight: "1.2em" }}>
@@ -127,7 +126,7 @@ export default function Home() {
             </h1>
 
             <p
-              className="hero-sub max-w-xl text-base leading-relaxed"
+              className="hero-sub max-w-[440px] text-sm leading-relaxed"
               style={{ color: "var(--text-secondary)", marginTop: "0.8rem" }}
             >
               I build fast, modern web applications with React, Next.js, and
