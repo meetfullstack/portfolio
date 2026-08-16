@@ -166,14 +166,18 @@ export default function ScrambleText({ from, to, className, style }: Props) {
   }, []);
 
   return (
-    <span
-      ref={spanRef}
-      className={className}
-      style={style}
-      onMouseEnter={() => scramble(from, to)}
-      onMouseLeave={() => scramble(to, from)}
-    >
-      {from}
-    </span>
+    <>
+      <span
+        ref={spanRef}
+        aria-hidden="true"
+        className={className}
+        style={style}
+        onMouseEnter={() => scramble(from, to)}
+        onMouseLeave={() => scramble(to, from)}
+      >
+        {from}
+      </span>
+      <span className="sr-only">{from}</span>
+    </>
   );
 }
