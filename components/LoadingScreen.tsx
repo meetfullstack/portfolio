@@ -10,13 +10,18 @@ export default function LoadingScreen() {
   const fillRectRef = useRef<SVGRectElement>(null);
   const outlineRef = useRef<SVGTextElement>(null);
 
-  // Only show once per browser session — skip on refresh/navigation
+  // Only show once per browser session, and never for users who prefer
+  // reduced motion — skip on refresh/navigation or that OS setting.
   useEffect(() => {
     // Deferred to a microtask so the setState calls aren't synchronous
     // within the effect body (avoids cascading-render lint warning);
     // still resolves before paint, so there's no visible delay.
     queueMicrotask(() => {
-      if (sessionStorage.getItem("loaded")) {
+      const reducedMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+      ).matches;
+      if (sessionStorage.getItem("loaded") || reducedMotion) {
+        sessionStorage.setItem("loaded", "1");
         setShow(false);
         return;
       }
@@ -60,54 +65,67 @@ export default function LoadingScreen() {
   if (show === false) return null;
 
   return (
-    <div
-      ref={overlayRef}
-      role="status"
-      aria-live="polite"
-      aria-label="Loading"
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 9999,
-        background: "#0a0a0a",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      {/* SVG: ghost outline "M" + rect that rises from bottom clipped to the letter shape */}
-      <svg viewBox="0 0 160 160" width="220" height="220">
-        <defs>
-          <clipPath id="m-clip">
-            <text x="80" y="140" textAnchor="middle" fontSize="148"
-              fontFamily="var(--font-sans), system-ui, sans-serif" fontWeight="800">
-              M
-            </text>
-          </clipPath>
-          <filter id="m-glow" x="-30%" y="-30%" width="160%" height="160%">
-            <feGaussianBlur stdDeviation="5" result="blur" />
-            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-          </filter>
-        </defs>
+    <>
+      <div
+        ref={overlayRef}
+        id="loading-screen"
+        role="status"
+        aria-live="polite"
+        aria-label="Loading"
+        suppressHydrationWarning
+        style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 9999,
+          background: "#0a0a0a",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        {/* SVG: ghost outline "M" + rect that rises from bottom clipped to the letter shape */}
+        <svg viewBox="0 0 160 160" width="220" height="220">
+          <defs>
+            <clipPath id="m-clip">
+              <text x="80" y="140" textAnchor="middle" fontSize="148"
+                fontFamily="var(--font-sans), system-ui, sans-serif" fontWeight="800">
+                M
+              </text>
+            </clipPath>
+            <filter id="m-glow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="5" result="blur" />
+              <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+            </filter>
+          </defs>
 
-        {/* Ghost outline */}
-        <text ref={outlineRef} x="80" y="140" textAnchor="middle" fontSize="148"
-          fontFamily="var(--font-sans), system-ui, sans-serif" fontWeight="800"
-          fill="rgba(168,85,247,0.12)" stroke="rgba(168,85,247,0.3)" strokeWidth="1">
-          M
-        </text>
+          {/* Ghost outline */}
+          <text ref={outlineRef} x="80" y="140" textAnchor="middle" fontSize="148"
+            fontFamily="var(--font-sans), system-ui, sans-serif" fontWeight="800"
+            fill="rgba(168,85,247,0.12)" stroke="rgba(168,85,247,0.3)" strokeWidth="1">
+            M
+          </text>
 
-        {/* Rising fill */}
-        <rect ref={fillRectRef} x="0" y="100%" width="100%" height="100%"
-          fill="#a855f7" clipPath="url(#m-clip)" />
+          {/* Rising fill */}
+          <rect ref={fillRectRef} x="0" y="100%" width="100%" height="100%"
+            fill="#a855f7" clipPath="url(#m-clip)" />
 
-        {/* Glow */}
-        <text x="80" y="140" textAnchor="middle" fontSize="148"
-          fontFamily="var(--font-sans), system-ui, sans-serif" fontWeight="800"
-          fill="rgba(168,85,247,0.1)" filter="url(#m-glow)" style={{ pointerEvents: "none" }}>
-          M
-        </text>
-      </svg>
-    </div>
+          {/* Glow */}
+          <text x="80" y="140" textAnchor="middle" fontSize="148"
+            fontFamily="var(--font-sans), system-ui, sans-serif" fontWeight="800"
+            fill="rgba(168,85,247,0.1)" filter="url(#m-glow)" style={{ pointerEvents: "none" }}>
+            M
+          </text>
+        </svg>
+      </div>
+      {/* Blocking script, runs synchronously right after the overlay is
+          parsed — hides it before first paint on repeat visits or when the
+          user prefers reduced motion, so React never gets a chance to flash
+          it in before its own effect catches up. */}
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `(function(){try{var r=window.matchMedia("(prefers-reduced-motion: reduce)").matches;if(sessionStorage.getItem("loaded")||r){var el=document.getElementById("loading-screen");if(el)el.style.display="none";}}catch(e){}})();`,
+        }}
+      />
+    </>
   );
 }
