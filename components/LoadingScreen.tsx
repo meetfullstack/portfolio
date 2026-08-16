@@ -38,27 +38,84 @@ export default function LoadingScreen() {
     document.body.style.overflow = "hidden";
     document.documentElement.style.overflow = "hidden";
 
+    let cancelled = false;
+    let approachTween: gsap.core.Tween | null = null;
+
+    // Resolves once the browser has actually finished loading the page
+    // (images, fonts, scripts) — not on a fixed timer.
+    const pageLoaded = new Promise<void>((resolve) => {
+      if (document.readyState === "complete") {
+        resolve();
+      } else {
+        window.addEventListener("load", () => resolve(), { once: true });
+      }
+    });
+    let loaded = false;
+    pageLoaded.then(() => {
+      loaded = true;
+    });
+
+    const finish = () => {
+      gsap.to(overlayRef.current, {
+        yPercent: -100,
+        duration: 0.9,
+        ease: "power4.inOut",
+        onComplete: () => {
+          document.body.style.overflow = "";
+          document.documentElement.style.overflow = "";
+          (window as Window & { __loaderDone?: boolean }).__loaderDone = true;
+          window.dispatchEvent(new CustomEvent("portfolio:loader-done"));
+          setShow(false);
+        },
+      });
+    };
+
     const tl = gsap.timeline({
       onComplete: () => {
-        gsap.to(overlayRef.current, {
-          yPercent: -100,
-          duration: 0.9,
-          ease: "power4.inOut",
-          onComplete: () => {
-            document.body.style.overflow = "";
-            document.documentElement.style.overflow = "";
-            (window as Window & { __loaderDone?: boolean }).__loaderDone = true;
-            window.dispatchEvent(new CustomEvent("portfolio:loader-done"));
-            setShow(false);
-          },
+        if (cancelled) return;
+
+        if (loaded) {
+          // Page was already done loading — finish the fill quickly.
+          gsap.to(fillRectRef.current, {
+            attr: { y: "0%" },
+            duration: 0.2,
+            ease: "power2.out",
+            onComplete: finish,
+          });
+          return;
+        }
+
+        // Still loading — ease toward (but not all the way to) full while
+        // genuinely waiting, so the fill never looks stuck at 70%.
+        approachTween = gsap.to(fillRectRef.current, {
+          attr: { y: "10%" },
+          duration: 1.5,
+          ease: "power2.out",
+        });
+
+        pageLoaded.then(() => {
+          if (cancelled) return;
+          approachTween?.kill();
+          gsap.to(fillRectRef.current, {
+            attr: { y: "0%" },
+            duration: 0.25,
+            ease: "power2.out",
+            onComplete: finish,
+          });
         });
       },
     });
 
+    // Outline fades in, then the fill rises to 70% on a fixed timer —
+    // the remaining 70% → 100% is driven by real page-load state above.
     tl.from(outlineRef.current, { opacity: 0, duration: 0.4, ease: "power2.out" })
-      .to(fillRectRef.current, { attr: { y: "0%" }, duration: 1.1, ease: "power2.inOut" }, "-=0.1")
-      .to({}, { duration: 0.5 });
+      .to(fillRectRef.current, { attr: { y: "30%" }, duration: 0.8, ease: "power3.out" }, "-=0.1");
 
+    return () => {
+      cancelled = true;
+      approachTween?.kill();
+      tl.kill();
+    };
   }, [show]);
 
   // null = not yet resolved; show blocker to prevent flash
