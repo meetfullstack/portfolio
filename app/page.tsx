@@ -95,14 +95,15 @@ export default function Home() {
 
   return (
     <>
-      <div className="relative overflow-hidden">
+      <section
+        ref={heroRef}
+        id="hero"
+        aria-labelledby="hero-title"
+        className="section relative overflow-hidden"
+        style={{ paddingBottom: "calc(var(--section-gap) + 4rem)" }}
+      >
         <MatrixRain />
-        <section
-          ref={heroRef}
-          id="hero"
-          aria-labelledby="hero-title"
-          className="section container relative z-10 grid items-center gap-12 lg:grid-cols-[1fr_338px]"
-        >
+        <div className="container relative z-10 grid items-center gap-12 lg:grid-cols-[1fr_338px]">
           <div className="flex flex-col min-w-0 order-2 lg:order-1">
             <p className="hero-tag section-tag mb-6">
               {"// hello.world"} — available for work
@@ -172,8 +173,29 @@ export default function Home() {
               </div>
             </div>
           </div>
-        </section>
-      </div>
+        </div>
+
+        <div className="hero-scroll-hint">
+          <span className="section-tag">{"// scroll to explore"}</span>
+          <svg
+            className="hero-scroll-chevron"
+            width="16"
+            height="24"
+            viewBox="0 0 16 24"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path d="M8 4L8 18" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
+            <path
+              d="M2 14L8 20L14 14"
+              stroke="currentColor"
+              strokeWidth="1"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </div>
+      </section>
 
       <About />
       <Experience />
