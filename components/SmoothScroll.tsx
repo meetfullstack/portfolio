@@ -19,7 +19,7 @@ export default function SmoothScroll() {
       duration: prefersReducedMotion ? 0 : 1.15,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       // Let Lenis intercept #anchor clicks (nav + hero CTAs) and glide to them.
-      anchors: { offset: -80 },
+      anchors: { offset: -84 },
     });
 
     // Expose globally so other pages can call lenis.scrollTo(0, { immediate: true })

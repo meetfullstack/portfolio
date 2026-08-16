@@ -20,6 +20,12 @@
   --section-gap: 4rem;
 }
 
+@media (min-width: 1440px) {
+  :root {
+    --section-gap: 5rem;
+  }
+}
+
 .dark {
   --bg-primary: #000000;
   --bg-secondary: #111111;
@@ -39,7 +45,10 @@
 }
 
 html {
-  scroll-padding-top: 72px;
+  /* Matches the fixed nav's real rendered height (~82-83px, measured live —
+     not the ~56px it was previously set to, which let the nav overlap the
+     top of every page's content by ~27px). */
+  scroll-padding-top: 84px;
   overflow-x: hidden;
 }
 
@@ -55,7 +64,7 @@ html {
 }
 
 body {
-  padding-top: 56px;
+  padding-top: 84px;
   background-color: var(--bg-primary);
   color: var(--text-primary);
   font-family: var(--font-sans);

@@ -121,7 +121,7 @@ export default function Nav() {
       e.preventDefault();
       const lenis = (window as Window & { __lenis?: { scrollTo: (el: Element, opts?: object) => void } }).__lenis;
       if (lenis) {
-        lenis.scrollTo(target, { offset: -80 });
+        lenis.scrollTo(target, { offset: -84 });
       } else {
         target.scrollIntoView({ behavior: "smooth" });
       }
