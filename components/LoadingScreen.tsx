@@ -62,6 +62,9 @@ export default function LoadingScreen() {
   return (
     <div
       ref={overlayRef}
+      role="status"
+      aria-live="polite"
+      aria-label="Loading"
       style={{
         position: "fixed",
         inset: 0,

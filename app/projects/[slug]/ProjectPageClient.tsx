@@ -373,7 +373,8 @@ export default function ProjectPageClient({ slug }: { slug: string }) {
       </section>
 
       {/* ── Project nav ── */}
-      <section
+      <nav
+        aria-label="Project navigation"
         className="ph-nav"
         style={{ background: "var(--bg-secondary)", padding: "2.5rem 0", borderTop: "1px solid var(--border)" }}
       >
@@ -419,7 +420,7 @@ export default function ProjectPageClient({ slug }: { slug: string }) {
             ) : <div />}
           </div>
         </div>
-      </section>
+      </nav>
     </>
   );
 }
