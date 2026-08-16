@@ -65,11 +65,11 @@ export default function Contact() {
 
   if (state.success) {
     return (
-      <section id="contact" className="section">
+      <section id="contact" aria-labelledby="contact-success-title" className="section">
         <div className="container">
-          <div className="card max-w-xl p-10 text-center">
-            <p className="accent-text text-5xl font-bold">✓</p>
-            <p className="mt-4 text-lg font-semibold">Message sent!</p>
+          <div className="card max-w-xl p-10 text-center" role="status" aria-live="polite">
+            <p className="accent-text text-5xl font-bold" aria-hidden="true">✓</p>
+            <p id="contact-success-title" className="mt-4 text-lg font-semibold">Message sent!</p>
             <p className="mt-2 text-sm" style={{ color: "var(--text-secondary)" }}>
               I will get back to you soon.
             </p>
@@ -80,14 +80,14 @@ export default function Contact() {
   }
 
   return (
-    <section ref={sectionRef} id="contact" className="section">
+    <section ref={sectionRef} id="contact" aria-labelledby="contact-title" className="section">
       <div className="container relative">
         <span aria-hidden="true" className="contact-tag section-number">
           4
         </span>
         <div className="section-header relative">
           <p className="contact-tag section-tag mb-3">04 // contact.me</p>
-          <h2 className="text-4xl font-bold tracking-tight sm:text-5xl">
+          <h2 id="contact-title" aria-label="Get in touch" className="text-4xl font-bold tracking-tight sm:text-5xl">
             {"Get in touch".split(" ").map((word) => (
               <span key={word} style={{ display: "inline-block", overflow: "hidden", marginRight: "0.3em" }}>
                 <span className="contact-word" style={{ display: "inline-block" }}>{word}</span>

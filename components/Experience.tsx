@@ -31,6 +31,7 @@ export default function Experience() {
     <section
       ref={sectionRef}
       id="experience"
+      aria-labelledby="experience-title"
       className="section relative"
     >
       <div className="container relative">
@@ -39,7 +40,7 @@ export default function Experience() {
         </span>
         <div className="section-header relative">
           <p className="section-tag mb-3">02 // experience</p>
-          <h2 className="text-4xl font-bold tracking-tight sm:text-5xl">Experience</h2>
+          <h2 id="experience-title" className="text-4xl font-bold tracking-tight sm:text-5xl">Experience</h2>
         </div>
       </div>
     </section>

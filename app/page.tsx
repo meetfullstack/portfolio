@@ -99,6 +99,8 @@ export default function Home() {
         <MatrixRain />
         <section
           ref={heroRef}
+          id="hero"
+          aria-labelledby="hero-title"
           className="section container relative z-10 grid items-center gap-12 lg:grid-cols-[1fr_338px]"
         >
           <div className="flex flex-col min-w-0 order-2 lg:order-1">
@@ -107,6 +109,8 @@ export default function Home() {
             </p>
 
             <h1
+              id="hero-title"
+              aria-label="Hello, I'm Meet — Full-Stack Developer"
               className="hero-heading font-bold tracking-tight"
               style={{ fontSize: "clamp(1.5rem, 6vw, 3.5rem)", lineHeight: 1.2 }}
             >

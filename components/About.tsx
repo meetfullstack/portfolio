@@ -130,7 +130,7 @@ export default function About() {
   }
 
   return (
-    <section ref={sectionRef} id="about" className="relative">
+    <section ref={sectionRef} id="about" aria-labelledby="about-title" className="relative">
       <div
         ref={pinRef}
         className="relative overflow-hidden"
@@ -155,7 +155,7 @@ export default function About() {
             <div className="section-header relative flex items-center gap-4">
               <div>
                 <p className="about-tag section-tag mb-3">01 // about.me</p>
-                <h2 className="text-4xl font-bold tracking-tight sm:text-5xl" style={{ overflow: "hidden" }}>
+                <h2 id="about-title" aria-label="Who I am" className="text-4xl font-bold tracking-tight sm:text-5xl" style={{ overflow: "hidden" }}>
                   {"Who I am".split(" ").map((word) => (
                     <span key={word} style={{ display: "inline-block", overflow: "hidden", marginRight: "0.3em" }}>
                       <span className="about-word" style={{ display: "inline-block" }}>{word}</span>

@@ -194,7 +194,7 @@ export default function ProjectPageClient({ slug }: { slug: string }) {
 
       {/* ── Project image ── */}
       {project.image && (
-        <section style={{ background: "var(--bg-secondary)", padding: "3rem 0" }}>
+        <section aria-label={`${project.title} screenshot`} style={{ background: "var(--bg-secondary)", padding: "3rem 0" }}>
           <div className="container">
             <div
               className="ph-image"
@@ -247,6 +247,7 @@ export default function ProjectPageClient({ slug }: { slug: string }) {
       {/* ── Details: sidebar + content ── */}
       <section
         className="ph-details"
+        aria-label={`${project.title} details`}
         style={{
           padding: "4rem 0",
           background: "var(--bg-primary)",

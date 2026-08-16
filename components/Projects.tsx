@@ -207,6 +207,7 @@ export default function Projects() {
     <section
       ref={sectionRef}
       id="projects"
+      aria-labelledby="projects-title"
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       onMouseEnter={handleMouseEnterSection}
@@ -252,7 +253,7 @@ export default function Projects() {
         <span aria-hidden="true" className="projects-tag section-number">3</span>
         <div className="section-header relative">
           <p className="projects-tag section-tag mb-3">03 // projects.work</p>
-          <h2 className="text-4xl font-bold tracking-tight sm:text-5xl">
+          <h2 id="projects-title" aria-label="Things I have built" className="text-4xl font-bold tracking-tight sm:text-5xl">
             {"Things I have built".split(" ").map((word) => (
               <span key={word} style={{ display: "inline-block", overflow: "hidden", marginRight: "0.3em" }}>
                 <span className="projects-word" style={{ display: "inline-block" }}>{word}</span>
