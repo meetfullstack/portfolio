@@ -272,6 +272,19 @@ body {
   padding: 0 2rem;
 }
 
+@media (max-width: 599px) {
+  .container {
+    padding: 0 1.5rem;
+  }
+}
+
+@media (min-width: 1440px) {
+  .container {
+    max-width: 1400px;
+    padding: 0 3rem;
+  }
+}
+
 .section {
   padding-top: var(--section-gap);
   padding-bottom: var(--section-gap);
