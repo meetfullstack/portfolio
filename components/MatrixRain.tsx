@@ -33,12 +33,18 @@ export default function MatrixRain() {
       ctx!.fillRect(0, 0, canvas!.width, canvas!.height);
     }
 
-    // Set dimensions once — never reassign canvas.width/height so scroll
-    // can never clear the bitmap.
-    canvas.width = canvas.offsetWidth;
-    canvas.height = canvas.offsetHeight;
-    drops = Array(Math.floor(canvas.width / fontSize)).fill(1);
-    solidFill(lastDark);
+    // Set dimensions on mount and on real window resize only — never on
+    // scroll, since reassigning canvas.width/height clears the bitmap.
+    function syncSize() {
+      if (!canvas) return;
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+      drops = Array(Math.floor(canvas.width / fontSize)).fill(1);
+      solidFill(document.documentElement.classList.contains("dark"));
+    }
+
+    syncSize();
+    window.addEventListener("resize", syncSize);
 
     function tick(now: number) {
       raf = requestAnimationFrame(tick);
@@ -80,6 +86,7 @@ export default function MatrixRain() {
 
     return () => {
       cancelAnimationFrame(raf);
+      window.removeEventListener("resize", syncSize);
     };
   }, []);
 

@@ -100,7 +100,10 @@ export default function Home() {
         id="hero"
         aria-labelledby="hero-title"
         className="section relative overflow-hidden"
-        style={{ paddingBottom: "calc(var(--section-gap) + 4rem)" }}
+        style={{
+          paddingTop: "calc(var(--section-gap) + 42px)",
+          paddingBottom: "calc(var(--section-gap) + 4rem)",
+        }}
       >
         <MatrixRain />
         <div className="container relative z-10 grid items-center gap-12 lg:grid-cols-[1fr_338px]">
