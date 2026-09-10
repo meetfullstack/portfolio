@@ -1,6 +1,9 @@
 export default function Loading() {
   return (
     <div
+      role="status"
+      aria-live="polite"
+      aria-label="Loading"
       style={{
         minHeight: "60vh",
         display: "flex",
@@ -9,7 +12,7 @@ export default function Loading() {
       }}
     >
       <span
-        aria-label="Loading"
+        aria-hidden="true"
         style={{
           width: 32,
           height: 32,

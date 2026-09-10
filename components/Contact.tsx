@@ -110,7 +110,6 @@ export default function Contact() {
               <p
                 id="contact-form-error"
                 role="alert"
-                aria-live="polite"
                 className="rounded-xl px-4 py-3 text-sm"
                 style={{ background: "rgba(239,68,68,0.1)", color: "#f87171" }}
               >
@@ -174,7 +173,9 @@ export default function Contact() {
               onMouseLeave={handleBtnLeave}
               onMouseDown={handleBtnDown}
               onMouseUp={handleBtnUp}
-              className="mt-2 rounded-full py-3 text-sm font-semibold text-white disabled:opacity-50 accent-gradient"
+              // Same sharp, mono button system as the hero CTAs and project
+              // links — this was the only rounded/gradient button on the site.
+              className="btn btn--primary mt-2 self-start disabled:opacity-50"
               style={{ willChange: "transform" }}
             >
               {pending ? "Sending..." : "Send message"}

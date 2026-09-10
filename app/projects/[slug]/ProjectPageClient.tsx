@@ -39,47 +39,57 @@ export default function ProjectPageClient({ slug }: { slug: string }) {
       gsap.from(".ph-role",     { opacity: 0, y: 16, duration: 0.5, ease: "power3.out", delay: 0.45 });
       gsap.from(".ph-subtitle", { opacity: 0, y: 14, duration: 0.5, ease: "power3.out", delay: 0.5 });
 
-      // Hide image immediately before it flashes — then animate once height is known
-      gsap.set(".pi-reveal", { filter: "blur(10px)", clipPath: "inset(100% 0px 0px 0px)" });
-      gsap.set(".pi-blur",   { clipPath: "inset(0px 0px 0px 0px)" });
+      // The image reveal only exists when the project has a screenshot.
+      // Guarding on the DOM means GSAP never warns about missing targets
+      // for projects without one.
+      let cleanupImageLoad: (() => void) | undefined;
+      const revealEl = document.querySelector<HTMLElement>(".pi-reveal");
 
-      const runImageReveal = () => {
-        const frame = document.querySelector(".ph-image") as HTMLElement;
-        const h = frame ? frame.offsetHeight : 400;
-        const D = 2.5;
+      if (revealEl) {
+        // Hide image immediately before it flashes — then animate once height is known
+        gsap.set(revealEl, { filter: "blur(10px)", clipPath: "inset(100% 0px 0px 0px)" });
+        gsap.set(".pi-blur", { clipPath: "inset(0px 0px 0px 0px)" });
 
-        gsap.set(".pi-reveal", { clipPath: `inset(${h}px 0px 0px 0px)` });
-        gsap.set(".pi-trail",  { y: h });
+        const runImageReveal = () => {
+          const frame = document.querySelector<HTMLElement>(".ph-image");
+          const h = frame ? frame.offsetHeight : 400;
+          const D = 2.5;
 
-        const tl = gsap.timeline({ delay: 0.3 });
+          gsap.set(revealEl, { clipPath: `inset(${h}px 0px 0px 0px)` });
+          gsap.set(".pi-trail", { y: h });
 
-        tl.fromTo(".pi-reveal",
-          { clipPath: `inset(${h}px 0px 0px 0px)`, filter: "blur(10px)" },
-          { clipPath: "inset(0px 0px 0px 0px)", filter: "blur(0px)", duration: D, ease: "circ.inOut" });
+          const tl = gsap.timeline({ delay: 0.3 });
 
-        tl.to(".pi-trail", { y: -30, duration: D, ease: "circ.inOut",
-          onComplete: () => gsap.set(".pi-trail", { display: "none" }) }, 0);
+          tl.fromTo(revealEl,
+            { clipPath: `inset(${h}px 0px 0px 0px)`, filter: "blur(10px)" },
+            { clipPath: "inset(0px 0px 0px 0px)", filter: "blur(0px)", duration: D, ease: "circ.inOut" });
 
-        tl.fromTo(".pi-blur",
-          { clipPath: "inset(0px 0px 0px 0px)" },
-          { clipPath: `inset(0px 0px ${h}px 0px)`, duration: D, ease: "circ.inOut" }, 0);
+          tl.to(".pi-trail", { y: -30, duration: D, ease: "circ.inOut",
+            onComplete: () => gsap.set(".pi-trail", { display: "none" }) }, 0);
 
-        const shakeAt = D * 0.85;
-        tl.to(".ph-image", { skewX: 1.5,  x:  3, duration: 0.04, ease: "none" }, shakeAt)
-          .to(".ph-image", { skewX: -0.8, x: -2, duration: 0.04, ease: "none" }, shakeAt + 0.04)
-          .to(".ph-image", { skewX: 0,    x:  0, duration: 0.03, ease: "power2.out" }, shakeAt + 0.08)
-          .to(".pi-reveal", { filter: "blur(0px) hue-rotate(15deg)", duration: 0.05 }, shakeAt)
-          .to(".pi-reveal", { filter: "blur(0px) hue-rotate(0deg)",  duration: 0.05 }, shakeAt + 0.05);
-      };
+          tl.fromTo(".pi-blur",
+            { clipPath: "inset(0px 0px 0px 0px)" },
+            { clipPath: `inset(0px 0px ${h}px 0px)`, duration: D, ease: "circ.inOut" }, 0);
 
-      // Wait for image to load so offsetHeight is correct
-      const img = document.querySelector(".pi-reveal img") as HTMLImageElement;
-      if (img && !img.complete) {
-        img.addEventListener("load", runImageReveal, { once: true });
-        // Cleanup stored on ctx so it runs on unmount
-        return () => img.removeEventListener("load", runImageReveal);
-      } else {
-        runImageReveal();
+          const shakeAt = D * 0.85;
+          tl.to(".ph-image", { skewX: 1.5,  x:  3, duration: 0.04, ease: "none" }, shakeAt)
+            .to(".ph-image", { skewX: -0.8, x: -2, duration: 0.04, ease: "none" }, shakeAt + 0.04)
+            .to(".ph-image", { skewX: 0,    x:  0, duration: 0.03, ease: "power2.out" }, shakeAt + 0.08)
+            .to(revealEl, { filter: "blur(0px) hue-rotate(15deg)", duration: 0.05 }, shakeAt)
+            .to(revealEl, { filter: "blur(0px) hue-rotate(0deg)",  duration: 0.05 }, shakeAt + 0.05);
+        };
+
+        // Wait for the image to load so offsetHeight is correct. This must
+        // not return early: the sidebar/content/nav animations below still
+        // have to be registered while the image is in flight — previously
+        // they were silently skipped on every cold load.
+        const img = revealEl.querySelector<HTMLImageElement>("img");
+        if (img && !img.complete) {
+          img.addEventListener("load", runImageReveal, { once: true });
+          cleanupImageLoad = () => img.removeEventListener("load", runImageReveal);
+        } else {
+          runImageReveal();
+        }
       }
 
       // Sidebar + content
@@ -91,6 +101,9 @@ export default function ProjectPageClient({ slug }: { slug: string }) {
       // Nav
       gsap.from(".ph-nav-link", { opacity: 0, y: 16, duration: 0.5, stagger: 0.1, ease: "power3.out",
         scrollTrigger: { trigger: ".ph-nav", start: "top 90%", once: true } });
+
+      // Runs on ctx.revert() (unmount / slug change).
+      return cleanupImageLoad;
     });
 
     return () => ctx.revert();
@@ -125,10 +138,8 @@ export default function ProjectPageClient({ slug }: { slug: string }) {
               marginBottom: "2rem",
               transition: "color 0.2s ease",
             }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "#a855f7"; (e.currentTarget.querySelector(".back-arr") as HTMLElement).style.transform = "translateX(-4px)"; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)"; (e.currentTarget.querySelector(".back-arr") as HTMLElement).style.transform = "translateX(0)"; }}
           >
-            <span className="back-arr" style={{ display: "inline-block", transition: "transform 0.2s ease" }}>←</span>
+            <span className="back-arr" aria-hidden="true" style={{ display: "inline-block", transition: "transform 0.2s ease" }}>←</span>
             All Projects
           </Link>
 
@@ -136,7 +147,7 @@ export default function ProjectPageClient({ slug }: { slug: string }) {
           <div className="ph-meta" style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem" }}>
             <span style={{
               fontFamily: "var(--font-mono)", fontSize: "0.65rem", fontWeight: 600,
-              color: "#a855f7", background: "rgba(168,85,247,0.1)",
+              color: "var(--accent-text)", background: "rgba(168,85,247,0.1)",
               padding: "3px 8px", borderRadius: "2px",
             }}>
               {project.year}
@@ -174,7 +185,7 @@ export default function ProjectPageClient({ slug }: { slug: string }) {
           <p className="ph-role" style={{
             fontFamily: "var(--font-mono)",
             fontSize: "0.9rem",
-            color: "#a855f7",
+            color: "var(--accent-text)",
             marginBottom: "0.6rem",
           }}>
             {project.role}
@@ -270,7 +281,7 @@ export default function ProjectPageClient({ slug }: { slug: string }) {
                 <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                   {project.features.map((f) => (
                     <li key={f} style={{ display: "flex", gap: "0.5rem", fontSize: "0.875rem", color: "var(--text-secondary)", alignItems: "flex-start" }}>
-                      <span style={{ color: "#a855f7", fontFamily: "var(--font-mono)", flexShrink: 0 }}>+</span>
+                      <span aria-hidden="true" style={{ color: "var(--accent-text)", fontFamily: "var(--font-mono)", flexShrink: 0 }}>+</span>
                       {f}
                     </li>
                   ))}
@@ -290,7 +301,7 @@ export default function ProjectPageClient({ slug }: { slug: string }) {
                   {project.tech.map((t) => (
                     <span key={t} style={{
                       fontFamily: "var(--font-mono)", fontSize: "0.63rem",
-                      color: "#a855f7",
+                      color: "var(--accent-text)",
                       background: "rgba(168,85,247,0.08)",
                       border: "1px solid rgba(168,85,247,0.25)",
                       padding: "3px 8px",
@@ -303,24 +314,16 @@ export default function ProjectPageClient({ slug }: { slug: string }) {
 
               {/* Links */}
               <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
+                {/* Styling (incl. hover/focus) lives in .project-detail-link
+                    so keyboard focus gets the same treatment as hover. */}
                 {project.github && (
                   <a
                     href={project.github}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="project-detail-link"
-                    style={{
-                      display: "inline-flex", alignItems: "center", gap: "0.5rem",
-                      fontFamily: "var(--font-mono)", fontSize: "0.78rem",
-                      color: "#a855f7", textDecoration: "none",
-                      padding: "0.6rem 1rem",
-                      border: "1px solid rgba(168,85,247,0.4)",
-                      transition: "background 0.2s ease, color 0.2s ease",
-                    }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "#a855f7"; (e.currentTarget as HTMLElement).style.color = "#fff"; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.color = "#a855f7"; }}
                   >
-                    View on GitHub <span>→</span>
+                    View on GitHub <span aria-hidden="true">→</span>
                   </a>
                 )}
                 {project.live && project.live !== "/" && (
@@ -329,18 +332,8 @@ export default function ProjectPageClient({ slug }: { slug: string }) {
                     target="_blank"
                     rel="noopener noreferrer"
                     className="project-detail-link"
-                    style={{
-                      display: "inline-flex", alignItems: "center", gap: "0.5rem",
-                      fontFamily: "var(--font-mono)", fontSize: "0.78rem",
-                      color: "#a855f7", textDecoration: "none",
-                      padding: "0.6rem 1rem",
-                      border: "1px solid rgba(168,85,247,0.4)",
-                      transition: "background 0.2s ease, color 0.2s ease",
-                    }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "#a855f7"; (e.currentTarget as HTMLElement).style.color = "#fff"; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.color = "#a855f7"; }}
                   >
-                    Visit Live Site <span>→</span>
+                    Visit Live Site <span aria-hidden="true">→</span>
                   </a>
                 )}
               </div>
@@ -388,10 +381,8 @@ export default function ProjectPageClient({ slug }: { slug: string }) {
                 background: "var(--bg-card)", border: "1px solid var(--border)",
                 minWidth: 180, transition: "border-color 0.2s ease",
               }}
-                onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = "rgba(168,85,247,0.4)"}
-                onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = "var(--border)"}
               >
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.65rem", color: "var(--text-muted)" }}>← Previous</span>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.65rem", color: "var(--text-secondary)" }}>← Previous</span>
                 <span style={{ fontSize: "0.9rem", fontWeight: 600, color: "var(--text-primary)" }}>{prev.title}</span>
               </Link>
             ) : <div />}
@@ -412,10 +403,8 @@ export default function ProjectPageClient({ slug }: { slug: string }) {
                 background: "var(--bg-card)", border: "1px solid var(--border)",
                 minWidth: 180, textAlign: "right", transition: "border-color 0.2s ease",
               }}
-                onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = "rgba(168,85,247,0.4)"}
-                onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = "var(--border)"}
               >
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.65rem", color: "var(--text-muted)" }}>Next →</span>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.65rem", color: "var(--text-secondary)" }}>Next →</span>
                 <span style={{ fontSize: "0.9rem", fontWeight: 600, color: "var(--text-primary)" }}>{next.title}</span>
               </Link>
             ) : <div />}

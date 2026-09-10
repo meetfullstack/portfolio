@@ -44,29 +44,19 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/",
   },
+  // og:image / twitter:image come from app/opengraph-image.tsx (a generated
+  // 1200x630 card), which the file convention wires up automatically.
   openGraph: {
     type: "website",
     url: SITE_URL,
     siteName: SITE_NAME,
     title,
     description,
-    // Real dimensions of /profile.jpg (portrait, not the ideal 1200x630
-    // OG landscape ratio) — a dedicated share image would render better on
-    // social platforms, but this is at least accurate rather than a lie.
-    images: [
-      {
-        url: "/profile.jpg",
-        width: 1516,
-        height: 1980,
-        alt: "Meet Upadhyay — Full Stack Developer",
-      },
-    ],
   },
   twitter: {
     card: "summary_large_image",
     title,
     description,
-    images: ["/profile.jpg"],
   },
 };
 

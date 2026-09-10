@@ -5,6 +5,9 @@ type CornerButtonProps = {
   variant: "primary" | "secondary";
   children: React.ReactNode;
   external?: boolean;
+  /** Serve the target as a download; pass a string to set the saved filename. */
+  download?: boolean | string;
+  ariaLabel?: string;
 };
 
 export default function CornerButton({
@@ -12,6 +15,8 @@ export default function CornerButton({
   variant,
   children,
   external = false,
+  download,
+  ariaLabel,
 }: CornerButtonProps) {
   const externalProps = external
     ? { target: "_blank", rel: "noopener noreferrer" }
@@ -32,7 +37,14 @@ export default function CornerButton({
   }
 
   return (
-    <a href={href} className="btn-frame" onClick={handleClick} {...externalProps}>
+    <a
+      href={href}
+      className="btn-frame"
+      onClick={handleClick}
+      download={download}
+      aria-label={ariaLabel}
+      {...externalProps}
+    >
       <span className={`btn btn--${variant}`}>{children}</span>
       <span className="btn-corner btn-corner--tl" aria-hidden="true" />
       <span className="btn-corner btn-corner--tr" aria-hidden="true" />

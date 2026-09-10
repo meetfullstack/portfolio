@@ -4,13 +4,20 @@ import { Resend } from "resend";
 import { z } from "zod";
 import { headers } from "next/headers";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 const schema = z.object({
-  name: z.string().min(1, "Name is required").max(100, "Name is too long"),
-  email: z.string().email("Invalid email address").max(254, "Email is too long"),
+  name: z
+    .string()
+    .trim()
+    .min(1, "Name is required")
+    .max(100, "Name is too long"),
+  email: z
+    .string()
+    .trim()
+    .email("Invalid email address")
+    .max(254, "Email is too long"),
   message: z
     .string()
+    .trim()
     .min(10, "Message must be at least 10 characters")
     .max(5000, "Message is too long"),
 });
@@ -29,6 +36,9 @@ const submissions = new Map<string, { count: number; resetAt: number }>();
 
 function isRateLimited(key: string): boolean {
   const now = Date.now();
+  for (const [storedKey, storedEntry] of submissions) {
+    if (now > storedEntry.resetAt) submissions.delete(storedKey);
+  }
   const entry = submissions.get(key);
 
   if (!entry || now > entry.resetAt) {
@@ -54,19 +64,6 @@ export async function sendContactEmail(
     return { success: true, error: null };
   }
 
-  const headersList = await headers();
-  const ip =
-    headersList.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    headersList.get("x-real-ip") ??
-    "unknown";
-
-  if (isRateLimited(ip)) {
-    return {
-      success: false,
-      error: "Too many messages sent. Please try again later.",
-    };
-  }
-
   const raw = {
     name: formData.get("name"),
     email: formData.get("email"),
@@ -81,12 +78,36 @@ export async function sendContactEmail(
   }
 
   const { name, email, message } = result.data;
+  const headersList = await headers();
+  const ip =
+    headersList.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    headersList.get("x-real-ip") ??
+    "unknown";
+
+  if (isRateLimited(ip)) {
+    return {
+      success: false,
+      error: "Too many messages sent. Please try again later.",
+    };
+  }
+
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    console.error("Contact form is unavailable: RESEND_API_KEY is not configured.");
+    return {
+      success: false,
+      error: "The contact form is temporarily unavailable. Please try again later.",
+    };
+  }
+
+  const safeName = name.replace(/[\r\n]+/g, " ");
 
   try {
-    await resend.emails.send({
+    await new Resend(apiKey).emails.send({
       from: process.env.RESEND_FROM_EMAIL ?? "onboarding@resend.dev",
       to: "meetupadhyay158@gmail.com",
-      subject: `Portfolio contact from ${name}`,
+      replyTo: email,
+      subject: `Portfolio contact from ${safeName}`,
       text: `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
     });
     return { success: true, error: null };

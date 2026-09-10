@@ -4,13 +4,14 @@ import { useRef, useEffect } from "react";
 import gsap from "gsap";
 import MatrixRain from "@/components/MatrixRain";
 import About from "@/components/About";
-import Experience from "@/components/Experience";
 import Projects from "@/components/Projects";
 import Contact from "@/components/Contact";
 import SectionDivider from "@/components/SectionDivider";
 import CornerButton from "@/components/CornerButton";
 import ScrambleText from "@/components/ScrambleText";
 import Image from "next/image";
+import Experience from "@/components/Experience";
+import { RESUME_URL, RESUME_FILENAME } from "@/lib/site";
 
 export default function Home() {
   const heroRef = useRef<HTMLElement>(null);
@@ -129,8 +130,8 @@ export default function Home() {
                 <ScrambleText
                   from="Full-Stack Developer"
                   to="Building AI Applications"
-                  className="accent-text"
-                  style={{ display: "block", whiteSpace: "nowrap" }}
+                  className="accent-text hero-scramble"
+                  style={{ display: "block" }}
                 />
               </span>
             </h1>
@@ -148,8 +149,13 @@ export default function Home() {
               <CornerButton href="#projects" variant="primary">
                 View my work
               </CornerButton>
-              <CornerButton href="#contact" variant="secondary">
-                Get in touch
+              <CornerButton
+                href={RESUME_URL}
+                variant="secondary"
+                download={RESUME_FILENAME}
+                ariaLabel="Download my resume (PDF)"
+              >
+                My Resume
               </CornerButton>
             </div>
           </div>
@@ -186,21 +192,30 @@ export default function Home() {
 
         <div className="hero-scroll-hint">
           <span className="section-tag">{"// scroll to explore"}</span>
+          {/* Double chevron pointing down — the trailing one sits at lower
+              opacity so the pair reads as motion rather than two arrows. */}
           <svg
             className="hero-scroll-chevron"
-            width="16"
-            height="24"
-            viewBox="0 0 16 24"
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
             fill="none"
             aria-hidden="true"
           >
-            <path d="M8 4L8 18" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
             <path
-              d="M2 14L8 20L14 14"
+              d="M5 6L12 13L19 6"
               stroke="currentColor"
-              strokeWidth="1"
+              strokeWidth="1.5"
               strokeLinecap="round"
               strokeLinejoin="round"
+            />
+            <path
+              d="M5 12L12 19L19 12"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              opacity="0.5"
             />
           </svg>
         </div>

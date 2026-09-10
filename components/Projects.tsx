@@ -61,7 +61,7 @@ function ProjectCard({ project }: { project: ProjectDetail }) {
           <span style={{
             fontFamily: "var(--font-mono)",
             fontSize: "0.65rem",
-            color: "#a855f7",
+            color: "var(--accent-text)",
             background: "rgba(168,85,247,0.1)",
             padding: "2px 7px",
             borderRadius: "2px",
@@ -111,7 +111,7 @@ function ProjectCard({ project }: { project: ProjectDetail }) {
               padding: "3px 10px",
               fontFamily: "var(--font-mono)",
               fontSize: "0.65rem",
-              color: "#a855f7",
+              color: "var(--accent-text)",
               letterSpacing: "0.03em",
             }}>
               {t}
@@ -123,11 +123,10 @@ function ProjectCard({ project }: { project: ProjectDetail }) {
         <div className="work-card-cta" style={{
           marginTop: "0.75rem",
           transform: "translateY(6px)",
-          opacity: 0.7,
-          transition: "transform 0.4s ease, opacity 0.4s ease",
+          transition: "transform 0.4s ease",
           fontFamily: "var(--font-mono)",
           fontSize: "0.72rem",
-          color: "#a855f7",
+          color: "var(--accent-text)",
           display: "inline-flex",
           alignItems: "center",
           gap: "0.4rem",
@@ -239,15 +238,6 @@ export default function Projects() {
           WebkitMaskImage: "radial-gradient(300px circle at var(--spot-x, 50%) var(--spot-y, 50%), black 20%, transparent 80%)",
         } as React.CSSProperties}
       />
-
-      <style>{`
-        .work-card-custom:hover { border-color: rgba(168,85,247,0.4) !important; box-shadow: 0 12px 40px rgba(168,85,247,0.08); }
-        .work-card-custom:hover .work-card-title { color: #a855f7 !important; }
-        .work-card-custom:hover .work-card-cta { transform: translateY(0) !important; opacity: 1 !important; }
-        .work-card-custom:hover .work-card-arrow { transform: translateX(4px); }
-        .work-card-custom:hover .work-card-img { transform: scale(1.05); }
-        .work-card-custom:hover .work-card-overlay { opacity: 1 !important; }
-      `}</style>
 
       <div className="container relative" style={{ zIndex: 1 }}>
         <span aria-hidden="true" className="projects-tag section-number">3</span>

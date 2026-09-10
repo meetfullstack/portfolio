@@ -58,4 +58,6 @@ npm run lint    # run ESLint
 - `components/` — section components (`About`, `Experience`, `Projects`, `Contact`, `Nav`, `Footer`, …)
 - `app/projects/[slug]/` — individual project case-study pages
 - `lib/projects.ts` — project case-study content/data
+- `lib/experience.ts` — Experience section data (**currently placeholder text — replace before launch**)
+- `public/resume.pdf` — the Hero "My Resume" button downloads this file; add it (path is set in `lib/site.ts`)
 - `app/actions/contact.ts` — server action handling the contact form (validation, honeypot, rate limiting, email send)

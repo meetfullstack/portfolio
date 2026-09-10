@@ -4,6 +4,13 @@ import { getProject, projects } from "@/lib/projects";
 import { SITE_URL, SITE_NAME } from "@/lib/site";
 import ProjectPageClient from "./ProjectPageClient";
 
+// Every project slug is known at build time, so unknown slugs should be a
+// real HTTP 404. Without this, a request like /projects/nope was rendered on
+// demand and, because the root loading.tsx wraps the page in a Suspense
+// boundary, notFound() fired after the 200 response had already started
+// streaming — a soft-404 that search engines flag as an error.
+export const dynamicParams = false;
+
 export function generateStaticParams() {
   return projects.map((project) => ({ slug: project.slug }));
 }

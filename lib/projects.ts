@@ -29,7 +29,7 @@ export const projects: ProjectDetail[] = [
       "Automated HTML reporting",
     ],
     tech: ["Cypress", "Selenium", "Python", "JMeter", "GitHub Actions"],
-    image: "/screenshots/qa-automation-suite.png",
+    image: "/screenshots/qa-automation-suite.webp",
     github: "https://github.com/meetfullstack",
     content: [
       {
@@ -55,13 +55,12 @@ export const projects: ProjectDetail[] = [
     subtitle: "A fast, animated portfolio built to stand out — not just another template.",
     features: [
       "GSAP scroll & entrance animations",
-      "ASCII photo reveal effect",
+      "Scan-line photo reveal effect",
       "ScrambleText hover interaction",
       "Dark / light theme toggle",
       "Contact form with validation",
     ],
     tech: ["Next.js", "TypeScript", "Tailwind CSS", "GSAP", "Vercel"],
-    image: "/screenshots/portfolio.png",
     live: "/",
     content: [
       {
@@ -70,7 +69,7 @@ export const projects: ProjectDetail[] = [
       },
       {
         heading: "Technical Choices",
-        body: "Built on Next.js 16 with TypeScript for type safety, Tailwind CSS v4 for styling, and GSAP for all animations. The photo reveal uses canvas-based ASCII art that transitions to the real image on load. ScrambleText animates between strings using a requestAnimationFrame loop — no library needed.",
+        body: "Built on Next.js 16 with TypeScript for type safety, Tailwind CSS v4 for styling, and GSAP for all animations. The photo reveal layers a blurred copy over the sharp image and wipes it away with a clip-path scan line once the image has loaded. ScrambleText animates between strings using a requestAnimationFrame loop — no library needed.",
       },
       {
         heading: "What I Learned",

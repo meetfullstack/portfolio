@@ -11,12 +11,20 @@
   --bg-card: rgba(255, 255, 255, 0.7);
   --text-primary: #1d1d1f;
   --text-secondary: #6e6e73;
-  --text-muted: #aeaeb2;
+  /* UI/decorative only (~3:1) — not for body text; use --text-secondary. */
+  --text-muted: #8e8e93;
   --border: rgba(0, 0, 0, 0.08);
-  --accent-start: #8b5cf6;
   --accent-mid: #a855f7;
-  --accent-end: #c084fc;
-  --accent-gradient: linear-gradient(135deg, #8b5cf6, #a855f7, #c084fc);
+  /* Purple used as *text*. Darker than --accent-mid in light mode so small
+     labels clear WCAG AA (4.5:1) against the light background. */
+  --accent-text: #7c3aed;
+  /* Filled-button surface — white text must stay >= 4.5:1 on it in both
+     themes, so this one is deliberately not overridden by .dark. */
+  --btn-solid: #7c3aed;
+  --btn-gradient: linear-gradient(135deg, #6d28d9, #7c3aed, #9333ea);
+  /* Headline gradient (background-clip text). Light mode uses darker stops
+     so even the lightest stop stays above the 3:1 large-text minimum. */
+  --accent-gradient: linear-gradient(135deg, #7c3aed, #9333ea, #a855f7);
   --section-gap: 4rem;
 }
 
@@ -32,16 +40,31 @@
   --bg-card: rgba(255, 255, 255, 0.03);
   --text-primary: #f5f5f7;
   --text-secondary: #a1a1a6;
-  --text-muted: #6e6e73;
+  --text-muted: #8a8a8f;
   --border: rgba(255, 255, 255, 0.08);
+  /* On black the brand purple already passes AA for text (~5.3:1). */
+  --accent-text: #a855f7;
+  --accent-gradient: linear-gradient(135deg, #8b5cf6, #a855f7, #c084fc);
 }
 
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+/* Inside @layer base so Tailwind utilities (p-8, mt-4, …) can override it —
+   as an unlayered rule it silently won over every padding/margin utility. */
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+/* One consistent, on-brand focus indicator for keyboard users. Only shows
+   for keyboard/programmatic focus, never on mouse click. Inputs override
+   this with their own ring in .input-field:focus. */
+:focus-visible {
+  outline: 2px solid var(--accent-text);
+  outline-offset: 3px;
 }
 
 html {
@@ -129,7 +152,7 @@ body {
   padding: 6px 14px;
   font-size: 0.75rem;
   font-weight: 500;
-  color: #a855f7;
+  color: var(--accent-text);
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
   background: rgba(168, 85, 247, 0.08);
@@ -150,10 +173,12 @@ body {
     0px 4px 12px 0px rgba(168, 85, 247, 0.15);
 }
 
+/* Filled surface (buttons) — text sits on the gradient itself. */
 .accent-gradient {
-  background: var(--accent-gradient);
+  background: var(--btn-gradient);
 }
 
+/* Gradient text (headlines) — theme-aware stops, see --accent-gradient. */
 .accent-text {
   background: var(--accent-gradient);
   -webkit-background-clip: text;
@@ -161,18 +186,11 @@ body {
   background-clip: text;
 }
 
-/* Scramble dud chars — must override -webkit-text-fill-color: transparent inherited from .accent-text */
-.scramble-dud {
-  -webkit-text-fill-color: var(--text-primary);
-  color: var(--text-primary);
-  font-family: "Segoe UI Symbol", "Apple Symbols", "Noto Sans Symbols", sans-serif;
-}
-
 .section-tag {
   font-family: var(--font-mono);
   font-size: 0.7rem;
   font-weight: 500;
-  color: var(--accent-mid);
+  color: var(--accent-text);
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -195,6 +213,21 @@ body {
 @media (min-width: 1440px) {
   .hero-heading {
     font-size: 3.5rem;
+  }
+}
+
+/* The scrambling headline line. Single-line on tablet/desktop; on narrow
+   phones (<= ~414px) both "Full-Stack Developer" and the hover target
+   "Building AI Applications" are wider than the column, so let it wrap
+   there instead of being clipped by the page's overflow-x: hidden. */
+.hero-scramble {
+  white-space: nowrap;
+}
+
+@media (max-width: 599px) {
+  .hero-scramble {
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
 }
 
@@ -243,6 +276,7 @@ body {
   margin: -1px;
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
   white-space: nowrap;
   border: 0;
 }
@@ -279,7 +313,7 @@ body {
 }
 
 .hero-scroll-chevron {
-  color: var(--text-secondary);
+  color: var(--accent-text);
   animation: hero-scroll-bounce 1.8s ease-in-out infinite;
 }
 
@@ -320,12 +354,6 @@ body {
   padding-bottom: var(--section-gap);
 }
 
-@media (max-width: 640px) {
-  .container {
-    padding: 0 1.5rem;
-  }
-}
-
 .btn {
   display: inline-flex;
   align-items: center;
@@ -346,9 +374,9 @@ body {
 }
 
 .btn--primary {
-  background: var(--accent-mid);
+  background: var(--btn-solid);
   color: #fff;
-  border-color: var(--accent-mid);
+  border-color: var(--btn-solid);
 }
 
 .btn--primary::before {
@@ -363,7 +391,8 @@ body {
 }
 
 .btn--primary:hover {
-  color: var(--accent-mid);
+  /* Text on the white hover fill — theme-independent, like the fill. */
+  color: var(--btn-solid);
   box-shadow: 0 4px 20px rgba(168, 85, 247, 0.3);
 }
 
@@ -375,7 +404,7 @@ body {
 .btn--secondary {
   background: transparent;
   color: var(--text-primary);
-  border-color: var(--text-muted);
+  border-color: var(--text-secondary);
 }
 
 .btn--secondary::before {
@@ -486,8 +515,9 @@ body {
   color: #ffffff;
 }
 
-a:hover .nav-link-text {
-  color: #a855f7;
+a:hover .nav-link-text,
+a:focus-visible .nav-link-text {
+  color: var(--accent-text);
 }
 
 /* Lenis smooth scroll */
@@ -517,11 +547,6 @@ html.lenis body {
   -webkit-text-stroke: 1.5px rgba(168, 85, 247, 0.2);
   user-select: none;
   pointer-events: none;
-}
-
-.section-number--left {
-  right: auto;
-  left: 0;
 }
 
 .dark .section-number {
@@ -642,4 +667,372 @@ html.lenis body {
   background: linear-gradient(rgba(255, 0, 255, 0.12) 0%, transparent 60%);
   transform: translateX(var(--ca-offset, 1px));
   mix-blend-mode: screen;
+}
+
+/* ── Project cards (Projects section) ────────────────────────── */
+/* Hover and keyboard focus get identical treatment. !important is needed
+   where the resting state is set via inline style on the element. */
+.work-card-custom:hover,
+.work-card-custom:focus-visible {
+  border-color: rgba(168, 85, 247, 0.4) !important;
+  box-shadow: 0 12px 40px rgba(168, 85, 247, 0.08);
+}
+
+.work-card-custom:hover .work-card-title,
+.work-card-custom:focus-visible .work-card-title {
+  color: var(--accent-text) !important;
+}
+
+.work-card-custom:hover .work-card-cta,
+.work-card-custom:focus-visible .work-card-cta {
+  transform: translateY(0) !important;
+}
+
+.work-card-custom:hover .work-card-arrow,
+.work-card-custom:focus-visible .work-card-arrow {
+  transform: translateX(4px);
+}
+
+.work-card-custom:hover .work-card-img,
+.work-card-custom:focus-visible .work-card-img {
+  transform: scale(1.05);
+}
+
+.work-card-custom:hover .work-card-overlay,
+.work-card-custom:focus-visible .work-card-overlay {
+  opacity: 1 !important;
+}
+
+/* ── Project detail page ─────────────────────────────────────── */
+.ph-back:hover,
+.ph-back:focus-visible {
+  color: var(--accent-text) !important;
+}
+
+.ph-back:hover .back-arr,
+.ph-back:focus-visible .back-arr {
+  transform: translateX(-4px);
+}
+
+.project-detail-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--accent-text);
+  text-decoration: none;
+  padding: 0.6rem 1rem;
+  border: 1px solid rgba(168, 85, 247, 0.4);
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.project-detail-link:hover,
+.project-detail-link:focus-visible {
+  background: var(--btn-solid);
+  color: #fff;
+}
+
+.ph-nav-link:hover,
+.ph-nav-link:focus-visible {
+  border-color: rgba(168, 85, 247, 0.4) !important;
+}
+
+/* ── Plain text links (hero profile links, footer) ───────────── */
+.text-link {
+  display: inline-block;
+  padding: 0.25rem 0; /* lifts each link to a >= 24px tall target */
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.text-link:hover,
+.text-link:focus-visible {
+  color: var(--accent-text);
+}
+
+/* ── Experience ──────────────────────────────────────────────── */
+.experience-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+  position: relative;
+}
+
+.experience-item {
+  position: relative;
+  display: grid;
+  gap: 1rem;
+  padding-left: 1.75rem;
+}
+
+/* Progression rail: a hairline running the full item height with a purple
+   node at the top — the same outlined-purple language as the section numbers. */
+.experience-item::before {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 0.55rem;
+  bottom: -2.5rem;
+  width: 1px;
+  background: var(--border);
+}
+
+.experience-item:last-child::before {
+  bottom: 0;
+}
+
+.experience-item::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.35rem;
+  width: 11px;
+  height: 11px;
+  border-radius: 999px;
+  border: 1.5px solid var(--accent-mid);
+  background: var(--bg-primary);
+  box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.12);
+}
+
+.experience-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-self: start;
+}
+
+.experience-period {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  margin-top: 0.25rem;
+}
+
+.experience-company {
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--text-primary);
+}
+
+.experience-location {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.experience-role {
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+}
+
+.experience-summary {
+  margin-top: 0.75rem;
+  max-width: 42rem;
+  line-height: 1.65;
+  color: var(--text-secondary);
+}
+
+.experience-highlights {
+  list-style: none;
+  margin-top: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  max-width: 42rem;
+}
+
+.experience-highlights li {
+  position: relative;
+  padding-left: 1.25rem;
+  font-size: 0.925rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+/* Same "+" marker the project pages use for feature lists. */
+.experience-highlights li::before {
+  content: "+";
+  position: absolute;
+  left: 0;
+  font-family: var(--font-mono);
+  color: var(--accent-text);
+}
+
+.experience-tech {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 1.5rem;
+}
+
+@media (min-width: 900px) {
+  .experience-item {
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: 2.5rem;
+    padding-left: 2.25rem;
+  }
+
+  .experience-meta {
+    position: sticky;
+    top: 108px; /* nav clearance (84px) + breathing room */
+  }
+}
+
+/* ── About: stacked stage cards ──────────────────────────────── */
+.about-stages {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Contains the scan line during the reveal wipe. */
+.about-stage--background {
+  position: relative;
+  overflow: hidden;
+}
+
+.about-scanline {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(168, 85, 247, 0.9) 50%,
+    transparent 100%
+  );
+  box-shadow:
+    0 0 12px rgba(168, 85, 247, 0.7),
+    0 0 32px rgba(168, 85, 247, 0.35);
+}
+
+.about-stage-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+  max-width: 40rem;
+}
+
+.about-stage-body {
+  margin-top: 0.75rem;
+  max-width: 42rem;
+  line-height: 1.7;
+  color: var(--text-secondary);
+}
+
+/* Quick-scan fact tiles inside the Background card — nested glass on glass,
+   same border/radius language as .input-field. */
+.about-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.about-fact {
+  padding: 0.9rem 1rem;
+  border-radius: 12px;
+  background: var(--bg-card);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.about-fact dt {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.about-fact dd {
+  margin-top: 0.35rem;
+  font-size: 0.925rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.about-edu-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.about-edu {
+  padding: 1.1rem 1.25rem;
+  border-radius: 12px;
+  background: var(--bg-card);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.about-edu-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+}
+
+.about-edu-degree {
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.about-edu-period {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  color: var(--text-secondary);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.about-edu-school {
+  margin-top: 0.25rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--accent-text);
+}
+
+.about-edu-detail {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.about-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.about-stack-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0.6rem;
+}
+
+.about-stack-items {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
 }

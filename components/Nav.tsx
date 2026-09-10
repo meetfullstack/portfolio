@@ -30,7 +30,8 @@ export default function Nav() {
   const navRef = useRef<HTMLElement>(null);
   const logoRef = useRef<HTMLAnchorElement>(null);
   const logoLineRef = useRef<HTMLSpanElement>(null);
-  const overlayRef = useRef<HTMLElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useGSAP(
@@ -53,6 +54,7 @@ export default function Nav() {
 
   useEffect(() => {
     const overlay = overlayRef.current;
+    const menuButton = menuButtonRef.current;
     if (!overlay) return;
 
     if (mobileOpen) {
@@ -68,6 +70,39 @@ export default function Nav() {
         { opacity: 0, y: 16 },
         { opacity: 1, y: 0, duration: 0.35, stagger: 0.05, ease: "power3.out", delay: 0.05 }
       );
+
+      const focusable = Array.from(
+        overlay.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
+      );
+      focusable[0]?.focus();
+
+      const handleKeyDown = (event: KeyboardEvent) => {
+        if (event.key === "Escape") {
+          setMobileOpen(false);
+          return;
+        }
+
+        if (event.key !== "Tab" || focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      };
+
+      document.addEventListener("keydown", handleKeyDown);
+      return () => {
+        document.removeEventListener("keydown", handleKeyDown);
+        document.body.style.overflow = "";
+        menuButton?.focus();
+      };
     } else {
       document.body.style.overflow = "";
       gsap.to(overlay, {
@@ -78,15 +113,18 @@ export default function Nav() {
       });
     }
 
-    return () => {
-      document.body.style.overflow = "";
-    };
   }, [mobileOpen]);
 
   function handleLogoEnter() {
-    // color targets the <Link> — SVG inherits via currentColor, text also shifts
+    // color targets the <Link> — SVG inherits via currentColor, text also shifts.
+    // Read the theme-aware token at call time: GSAP needs a concrete color to
+    // tween to, and the value differs between light and dark mode.
+    const accent =
+      getComputedStyle(document.documentElement)
+        .getPropertyValue("--accent-text")
+        .trim() || "#7c3aed";
     gsap.to(logoRef.current, {
-      color: "#a855f7",
+      color: accent,
       duration: 0.25,
       ease: "power2.out",
     });
@@ -279,6 +317,7 @@ export default function Nav() {
 
         {/* Mobile hamburger — visible below sm breakpoint */}
         <button
+          ref={menuButtonRef}
           type="button"
           aria-label={mobileOpen ? "Close navigation menu" : "Open navigation menu"}
           aria-expanded={mobileOpen}
@@ -286,8 +325,8 @@ export default function Nav() {
           className="flex sm:hidden"
           style={{
             position: "relative",
-            width: 40,
-            height: 40,
+            width: 44,
+            height: 44,
             alignItems: "center",
             justifyContent: "center",
             borderRadius: 999,
@@ -343,9 +382,12 @@ export default function Nav() {
     {/* Mobile overlay menu — rendered outside <header> so its "fixed" isn't
         trapped by the header's own GSAP transform (which creates a new
         containing block for fixed descendants). */}
-    <nav
+    <div
       ref={overlayRef}
+      role="dialog"
+      aria-modal="true"
       aria-label="Mobile navigation"
+      aria-hidden={!mobileOpen}
       style={{
         display: "none",
         position: "fixed",
@@ -360,25 +402,50 @@ export default function Nav() {
         WebkitBackdropFilter: "blur(20px)",
       }}
     >
-      {links.map((link) => (
-        <a
-          key={link.href}
-          href={link.href}
-          onClick={handleHashClick}
-          className="mobile-nav-link"
-          style={{
-            fontFamily: "var(--font-mono)",
-            fontSize: "1.5rem",
-            fontWeight: 500,
-            letterSpacing: "0.03em",
-            color: "var(--text-primary)",
-            textDecoration: "none",
-          }}
-        >
-          {link.label}
-        </a>
-      ))}
-    </nav>
+      <button
+        type="button"
+        onClick={() => setMobileOpen(false)}
+        aria-label="Close navigation menu"
+        style={{
+          position: "absolute",
+          top: "1rem",
+          right: "1rem",
+          minWidth: 44,
+          minHeight: 44,
+          border: "1px solid rgba(168,85,247,0.35)",
+          borderRadius: 999,
+          background: "transparent",
+          color: "var(--text-primary)",
+          cursor: "pointer",
+          fontFamily: "var(--font-mono)",
+          fontSize: "1rem",
+        }}
+      >
+        ×
+      </button>
+      <nav aria-label="Mobile navigation">
+        {links.map((link) => (
+          <a
+            key={link.href}
+            href={link.href}
+            onClick={handleHashClick}
+            className="mobile-nav-link"
+            style={{
+              display: "block",
+              fontFamily: "var(--font-mono)",
+              fontSize: "1.5rem",
+              fontWeight: 500,
+              letterSpacing: "0.03em",
+              color: "var(--text-primary)",
+              textDecoration: "none",
+              margin: "1.5rem 0",
+            }}
+          >
+            {link.label}
+          </a>
+        ))}
+      </nav>
+    </div>
     </>
   );
 }

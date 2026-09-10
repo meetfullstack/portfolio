@@ -125,6 +125,7 @@ export default function ThemeToggle() {
 
   // Pill width: expands ONLY for scroll (to reveal up arrow)
   useEffect(() => {
+    if (!pillRef.current) return;
     const w = scrolled ? PAD * 2 + BTN * 2 + GAP : H;
     gsap.to(pillRef.current, { width: w, duration: 0.4, ease: "power4.inOut" });
   }, [scrolled]);
