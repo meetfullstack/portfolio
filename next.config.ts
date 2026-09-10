@@ -13,6 +13,7 @@ const csp = [
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
+  "object-src 'none'",
 ].join("; ");
 
 const securityHeaders = [
@@ -31,6 +32,8 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Don't advertise the framework in response headers.
+  poweredByHeader: false,
   async headers() {
     return [
       {
