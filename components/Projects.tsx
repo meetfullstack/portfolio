@@ -180,7 +180,7 @@ export default function Projects() {
         scrollTrigger: {
           trigger: sectionRef.current,
           start: "top 80%",
-          once: true,
+          toggleActions: "play none none none",
         },
       });
 

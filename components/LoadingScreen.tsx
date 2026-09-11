@@ -3,6 +3,17 @@
 import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 
+type LoaderWindow = Window & {
+  __loaderActive?: boolean;
+  __loaderDone?: boolean;
+  /** Per-document show/skip decision — see the mount effect. */
+  __loaderShouldShow?: boolean;
+};
+
+// Upper bound on waiting for window "load". A slow or hung request must never
+// be able to trap the visitor behind the loader.
+const MAX_LOAD_WAIT_MS = 4000;
+
 export default function LoadingScreen() {
   // Start as null (unknown) — resolved synchronously on first client paint
   const [show, setShow] = useState<boolean | null>(null);
@@ -17,38 +28,74 @@ export default function LoadingScreen() {
     // within the effect body (avoids cascading-render lint warning);
     // still resolves before paint, so there's no visible delay.
     queueMicrotask(() => {
-      const reducedMotion = window.matchMedia(
-        "(prefers-reduced-motion: reduce)"
-      ).matches;
-      if (sessionStorage.getItem("loaded") || reducedMotion) {
-        sessionStorage.setItem("loaded", "1");
-        setShow(false);
-        return;
+      const w = window as LoaderWindow;
+
+      // Decide once per page load, then reuse the answer. React Strict Mode
+      // runs this effect twice in development (and Fast Refresh remounts it).
+      // Re-reading the sessionStorage flag the first run had just written
+      // flipped the second run to "skip", which unmounted the loader before
+      // it ever signalled completion — leaving the hero, which waits on that
+      // signal, invisible on every fresh session.
+      if (w.__loaderShouldShow === undefined) {
+        try {
+          const reducedMotion = window.matchMedia(
+            "(prefers-reduced-motion: reduce)"
+          ).matches;
+          w.__loaderShouldShow =
+            !sessionStorage.getItem("loaded") && !reducedMotion;
+          sessionStorage.setItem("loaded", "1");
+        } catch {
+          // Storage throws when the browser blocks it (e.g. some private
+          // modes). Skip the intro rather than risk it never resolving.
+          w.__loaderShouldShow = false;
+        }
       }
-      sessionStorage.setItem("loaded", "1");
-      (window as Window & { __loaderActive?: boolean }).__loaderActive = true;
-      setShow(true);
+
+      if (w.__loaderShouldShow && !w.__loaderDone) {
+        w.__loaderActive = true;
+        setShow(true);
+      } else {
+        setShow(false);
+      }
     });
   }, []);
 
   useEffect(() => {
     if (!show) return;
+    const w = window as LoaderWindow;
 
     // Lock scroll as soon as we know the loader will show
     document.body.style.overflow = "hidden";
     document.documentElement.style.overflow = "hidden";
 
     let cancelled = false;
+    let released = false;
     let approachTween: gsap.core.Tween | null = null;
+    let loadCap: ReturnType<typeof setTimeout> | undefined;
+
+    // Hand the page back: unlock scroll and tell the hero it can animate.
+    // Idempotent, and also run from cleanup — so even if the loader is torn
+    // down mid-animation, the page is never left scroll-locked or with the
+    // hero waiting on a signal that will never arrive.
+    const release = () => {
+      if (released) return;
+      released = true;
+      document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
+      w.__loaderDone = true;
+      window.dispatchEvent(new CustomEvent("portfolio:loader-done"));
+    };
 
     // Resolves once the browser has actually finished loading the page
-    // (images, fonts, scripts) — not on a fixed timer.
+    // (images, fonts, scripts) — not on a fixed timer — but no later than
+    // MAX_LOAD_WAIT_MS.
     const pageLoaded = new Promise<void>((resolve) => {
       if (document.readyState === "complete") {
         resolve();
-      } else {
-        window.addEventListener("load", () => resolve(), { once: true });
+        return;
       }
+      window.addEventListener("load", () => resolve(), { once: true });
+      loadCap = setTimeout(resolve, MAX_LOAD_WAIT_MS);
     });
     let loaded = false;
     pageLoaded.then(() => {
@@ -56,15 +103,13 @@ export default function LoadingScreen() {
     });
 
     const finish = () => {
+      if (cancelled) return;
       gsap.to(overlayRef.current, {
         yPercent: -100,
         duration: 0.9,
         ease: "power4.inOut",
         onComplete: () => {
-          document.body.style.overflow = "";
-          document.documentElement.style.overflow = "";
-          (window as Window & { __loaderDone?: boolean }).__loaderDone = true;
-          window.dispatchEvent(new CustomEvent("portfolio:loader-done"));
+          release();
           setShow(false);
         },
       });
@@ -115,6 +160,9 @@ export default function LoadingScreen() {
       cancelled = true;
       approachTween?.kill();
       tl.kill();
+      clearTimeout(loadCap);
+      // Torn down before finishing — don't strand the page.
+      release();
     };
   }, [show]);
 

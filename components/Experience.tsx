@@ -31,8 +31,12 @@ export default function Experience() {
       // preference already zeroes CSS animation, so mirror that for GSAP.
       if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
+      // toggleActions rather than `once: true`: a `once` trigger kills itself
+      // when it fires, and if that happens while ScrollTrigger is refreshing
+      // (e.g. the page reloads already scrolled past it) the refresh loop
+      // reads a removed entry and throws "reading 'end'". Same one-shot play.
       const tl = gsap.timeline({
-        scrollTrigger: { trigger: sectionRef.current, start: "top 80%", once: true },
+        scrollTrigger: { trigger: sectionRef.current, start: "top 80%", toggleActions: "play none none none" },
       });
       tl.from(".experience-tag", { opacity: 0, y: 20, duration: 0.5, ease: "power3.out" })
         .from(".experience-word", { opacity: 0, y: "100%", duration: 0.5, stagger: 0.08, ease: "power3.out" }, "-=0.2")

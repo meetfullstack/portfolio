@@ -197,6 +197,7 @@ body {
 
 .hero-tag {
   font-size: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .hero-heading {
@@ -228,6 +229,107 @@ body {
   .hero-scramble {
     white-space: normal;
     overflow-wrap: anywhere;
+  }
+}
+
+/* ── Hero layout ──────────────────────────────────────────────── */
+/* Mobile/tablet: natural height. 22px here + body's 84px nav offset =
+   106px of top clearance; the bottom leaves room for the scroll hint. */
+.hero {
+  padding-top: 22px;
+  padding-bottom: 128px;
+}
+
+.hero-grid {
+  gap: 64px;
+}
+
+@media (min-width: 1440px) {
+  .hero-grid {
+    gap: 96px;
+  }
+}
+
+.hero-sub {
+  margin-top: 0.8rem;
+  max-width: 440px;
+  font-size: 0.875rem;
+  line-height: 1.625;
+  color: var(--text-secondary);
+}
+
+.hero-cta {
+  margin-top: 1.3rem;
+  gap: 2rem;
+  /* Equal-width buttons: 1fr columns in a shrink-wrapped grid all take the
+     width of the widest button. */
+  display: inline-grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  align-self: flex-start; /* don't stretch across the flex-column parent */
+}
+
+.hero-cta .btn {
+  width: 100%;
+}
+
+/* Desktop: the hero is exactly one screen tall, so "Who I am" never peeks
+   in cut off below it. Everything inside is sized in --u — one pixel of
+   the 1440×900 reference layout — scaled to the screen by whichever of
+   width or height is tighter, so the composition is identical on every
+   desktop and always fits.
+
+   Upscaling is capped at 1.2×: the content column stays inside the
+   site-wide 1400px container (keeping the hero aligned with every section
+   below), and past ~1.2× the longest headline ("Building AI Applications",
+   shown on hover) would crowd the photo. Text also has readability floors
+   so it can't shrink too far on small laptops. */
+@media (min-width: 1024px) and (orientation: landscape) {
+  .hero {
+    --u: min(1.2px, calc(100vw / 1440), calc((100vh - 84px) / 816));
+    display: flex;
+    align-items: center;
+    min-height: calc(100vh - 84px); /* 84px = fixed nav (body padding-top) */
+    padding-top: calc(48 * var(--u));
+    padding-bottom: calc(112 * var(--u)); /* room for the scroll hint */
+  }
+
+  .hero .hero-grid {
+    gap: calc(96 * var(--u));
+  }
+
+  .hero .hero-tag {
+    font-size: max(12px, calc(16 * var(--u)));
+    margin-bottom: calc(24 * var(--u));
+  }
+
+  .hero .hero-heading {
+    font-size: max(28px, calc(56 * var(--u)));
+  }
+
+  .hero .hero-sub {
+    margin-top: calc(13 * var(--u));
+    max-width: max(320px, calc(440 * var(--u)));
+    font-size: max(13px, calc(14 * var(--u)));
+  }
+
+  .hero .hero-cta {
+    margin-top: calc(21 * var(--u));
+    gap: calc(32 * var(--u));
+  }
+
+  .hero .btn {
+    font-size: max(12px, calc(14 * var(--u)));
+    padding: calc(12 * var(--u)) calc(24 * var(--u));
+  }
+
+  .hero .hero-photo-frame {
+    width: calc(338 * var(--u));
+    max-height: none;
+  }
+
+  .hero .hero-scroll-hint {
+    bottom: calc(32 * var(--u));
   }
 }
 
@@ -357,6 +459,7 @@ body {
 .btn {
   display: inline-flex;
   align-items: center;
+  gap: 0.5em;
   justify-content: center;
   font-family: var(--font-mono);
   font-size: 0.875rem;
@@ -541,7 +644,7 @@ html.lenis body {
   font-family: var(--font-sans);
   font-weight: 800;
   line-height: 0.78;
-  font-size: clamp(6rem, 14vw, 11rem);
+  font-size: clamp(4rem, 8vw, 6.5rem);
   letter-spacing: -0.04em;
   color: transparent;
   -webkit-text-stroke: 1.5px rgba(168, 85, 247, 0.2);
@@ -894,6 +997,12 @@ html.lenis body {
   gap: 1.5rem;
 }
 
+/* GSAP drives these cards' transform on entrance; .card's CSS transform
+   transition would lag behind every frame it writes. */
+.about-stage {
+  transition: box-shadow 0.2s ease;
+}
+
 /* Contains the scan line during the reveal wipe. */
 .about-stage--background {
   position: relative;
@@ -974,10 +1083,76 @@ html.lenis body {
 }
 
 .about-edu {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  align-items: start;
+  gap: 1rem;
   padding: 1.1rem 1.25rem;
   border-radius: 12px;
   background: var(--bg-card);
   box-shadow: inset 0 0 0 1px var(--border);
+}
+
+/* Degree row hover: border only. (The border is an inset box-shadow.) */
+.about-edu {
+  transition: box-shadow 0.25s ease;
+}
+
+.about-edu:hover {
+  box-shadow: inset 0 0 0 1px rgba(168, 85, 247, 0.45);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .about-edu {
+    transition: none;
+  }
+}
+
+/* Card label with its icon (Background / Education / Tech stack). */
+.about-stage-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.about-stage-label svg {
+  flex-shrink: 0;
+}
+
+/* School logo — or its initials until a logo file is added. */
+.about-edu-logo {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--bg-secondary);
+  box-shadow: inset 0 0 0 1px var(--border);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--accent-text);
+}
+
+.about-edu-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+@media (max-width: 599px) {
+  .about-edu {
+    grid-template-columns: 40px minmax(0, 1fr);
+    gap: 0.75rem;
+  }
+
+  .about-edu-logo {
+    width: 40px;
+    height: 40px;
+    font-size: 0.55rem;
+  }
 }
 
 .about-edu-head {
@@ -1018,21 +1193,91 @@ html.lenis body {
   color: var(--text-secondary);
 }
 
-.about-stack {
+/* ── Tech stack ticker — sizes measured from codedgar.com/about ── */
+.tech-ticker {
+  /* Bleed to the card's edges (it has p-8 = 32px) so pills slide in and out
+     of the card border instead of stopping short of it. */
+  margin: 0 -2rem;
+  padding: 8px 0;
+  overflow: hidden;
+  /* Fade the ends so items slide in and out instead of being cut. */
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+
+.tech-ticker:focus-visible {
+  outline: 2px solid var(--accent-mid);
+  outline-offset: -2px;
+}
+
+.tech-ticker__track {
   display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
+  width: max-content;
+  animation: ticker-scroll 30s linear infinite paused;
 }
 
-.about-stack-label {
-  font-size: 0.9rem;
-  font-weight: 600;
-  margin-bottom: 0.6rem;
+/* Runs only while on screen (IntersectionObserver in About.tsx);
+   hover or keyboard focus pauses it so items can be read. */
+.tech-ticker.is-animating .tech-ticker__track {
+  animation-play-state: running;
 }
 
-.about-stack-items {
+.tech-ticker:hover .tech-ticker__track,
+.tech-ticker:focus-within .tech-ticker__track {
+  animation-play-state: paused;
+}
+
+.tech-ticker__content {
   list-style: none;
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
+  gap: 32px;
+  padding-right: 32px; /* same as gap, so the loop seam is invisible */
+}
+
+.tech-ticker__item {
+  padding: 8px 16px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: nowrap;
+  color: var(--text-secondary);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.tech-ticker__item:hover {
+  color: var(--accent-text);
+  border-color: var(--accent-mid);
+}
+
+/* Each set is exactly half the track, so -50% lands on an identical frame. */
+@keyframes ticker-scroll {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* Reduced motion: no marquee — let the pills wrap as a static list. */
+@media (prefers-reduced-motion: reduce) {
+  .tech-ticker {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  .tech-ticker__track {
+    animation: none;
+    width: auto;
+    padding: 0 24px;
+  }
+
+  .tech-ticker__content {
+    flex-wrap: wrap;
+    gap: 12px;
+    padding-right: 0;
+  }
+
+  .tech-ticker__content[aria-hidden="true"] {
+    display: none;
+  }
 }

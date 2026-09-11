@@ -80,16 +80,38 @@ export default function Home() {
     gsap.set([".hero-tag", ".hero-heading", ".hero-sub", ".hero-cta"], { opacity: 0, y: 20 });
     gsap.set(".hero-image", { opacity: 0 });
 
-    if (loaderActive && !loaderDone) {
+    // The loader-done event and the fallback timer can both fire; only the
+    // first one plays the intro.
+    let revealed = false;
+    let fallback: ReturnType<typeof setTimeout> | undefined;
+    const reveal = () => {
+      if (revealed) return;
+      revealed = true;
+      clearTimeout(fallback);
+      animateHero();
+    };
+
+    // Wait for the loader only if one is genuinely on screen. A stale
+    // __loaderActive with no overlay in the DOM means it was torn down
+    // without signalling — waiting on it would leave the hero hidden forever.
+    const loaderOnScreen =
+      loaderActive && !loaderDone && document.getElementById("loading-screen") !== null;
+
+    if (loaderOnScreen) {
       // First visit — loader is still running, wait for it
-      window.addEventListener("portfolio:loader-done", animateHero, { once: true });
+      window.addEventListener("portfolio:loader-done", reveal, { once: true });
+      // Safety net: however the signal gets lost, never leave the hero
+      // invisible. Comfortably longer than the loader can run (it caps its
+      // own wait on window "load"), so it never cuts off a healthy intro.
+      fallback = setTimeout(reveal, 8000);
     } else {
       // Return visit or loader already done — animate immediately
-      animateHero();
+      reveal();
     }
 
     return () => {
-      window.removeEventListener("portfolio:loader-done", animateHero);
+      window.removeEventListener("portfolio:loader-done", reveal);
+      clearTimeout(fallback);
       tl?.kill();
     };
   }, []);
@@ -100,24 +122,13 @@ export default function Home() {
         ref={heroRef}
         id="hero"
         aria-labelledby="hero-title"
-        className="section relative overflow-hidden"
-        style={{
-          // codedgar's hero padding is flat at every breakpoint (106px top,
-          // 128px bottom) — unlike its other sections, it doesn't scale with
-          // --section-gap. Its <body> reserves 0px for the fixed nav; ours
-          // reserves 84px (see globals.css `body { padding-top }`, sized to
-          // match our nav's real height), so matching 106px here directly
-          // would double-count the nav offset — only the remaining 22px
-          // belongs on the section itself.
-          paddingTop: "22px",
-          paddingBottom: "128px",
-        }}
+        className="hero relative overflow-hidden"
       >
         <MatrixRain />
-        <div className="container relative z-10 grid items-center gap-[64px] min-[900px]:grid-cols-2 min-[1440px]:gap-[96px]">
+        <div className="hero-grid container relative z-10 grid items-center min-[900px]:grid-cols-2">
           <div className="flex flex-col min-w-0 order-2 min-[900px]:order-1">
-            <p className="hero-tag section-tag mb-6">
-              {"// hello.world"} — available for work
+            <p className="hero-tag section-tag">
+              {"// hello.world"}
             </p>
 
             <h1
@@ -131,22 +142,28 @@ export default function Home() {
                   from="Full-Stack Developer"
                   to="Building AI Applications"
                   className="accent-text hero-scramble"
-                  style={{ display: "block" }}
+                  // inline-block so the box grows with the nowrap text —
+                  // the background-clip gradient only paints inside the box.
+                  style={{ display: "inline-block" }}
                 />
               </span>
             </h1>
 
-            <p
-              className="hero-sub max-w-[440px] text-sm leading-relaxed"
-              style={{ color: "var(--text-secondary)", marginTop: "0.8rem" }}
-            >
+            <p className="hero-sub">
               I build fast, modern web applications with React, Next.js, and
               TypeScript. Currently open to software engineering and Data/AI
               roles in Toronto and remote.
             </p>
 
-            <div className="hero-cta flex flex-wrap gap-8" style={{ marginTop: "1.3rem" }}>
+            <div className="hero-cta">
               <CornerButton href="#projects" variant="primary">
+                {/* Grid icon — "browse the work" */}
+                <svg className="btn-icon" width="1.1em" height="1.1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <rect x="3" y="3" width="7" height="7" rx="1" />
+                  <rect x="14" y="3" width="7" height="7" rx="1" />
+                  <rect x="3" y="14" width="7" height="7" rx="1" />
+                  <rect x="14" y="14" width="7" height="7" rx="1" />
+                </svg>
                 View my work
               </CornerButton>
               <CornerButton
@@ -155,7 +172,13 @@ export default function Home() {
                 download={RESUME_FILENAME}
                 ariaLabel="Download my resume (PDF)"
               >
-                My Resume
+                {/* Download icon — the button saves a PDF */}
+                <svg className="btn-icon" width="1.1em" height="1.1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M12 3v12" />
+                  <path d="M7 10l5 5 5-5" />
+                  <path d="M4 21h16" />
+                </svg>
+                Resume
               </CornerButton>
             </div>
           </div>
@@ -169,7 +192,7 @@ export default function Home() {
                   fill
                   priority
                   className="object-cover"
-                  sizes="(max-width:1024px) 90vw, 338px"
+                  sizes="(max-width:1024px) 90vw, 406px"
                 />
               </div>
               <div className="photo-trail" style={{ position: "absolute", left: 0, right: 0, top: 0, height: 30, zIndex: 2, pointerEvents: "none", willChange: "transform" }} />
@@ -182,7 +205,7 @@ export default function Home() {
                   fill
                   priority
                   className="object-cover"
-                  sizes="(max-width:1024px) 90vw, 338px"
+                  sizes="(max-width:1024px) 90vw, 406px"
                   style={{ filter: "blur(14px)", transform: "scale(1.05)" }}
                 />
               </div>

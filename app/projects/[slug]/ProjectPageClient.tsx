@@ -94,13 +94,13 @@ export default function ProjectPageClient({ slug }: { slug: string }) {
 
       // Sidebar + content
       gsap.from(".ph-sidebar", { opacity: 0, x: -20, duration: 0.6, ease: "power3.out",
-        scrollTrigger: { trigger: ".ph-details", start: "top 80%", once: true } });
+        scrollTrigger: { trigger: ".ph-details", start: "top 80%", toggleActions: "play none none none" } });
       gsap.from(".ph-content", { opacity: 0, y: 20, duration: 0.6, ease: "power3.out", delay: 0.1,
-        scrollTrigger: { trigger: ".ph-details", start: "top 80%", once: true } });
+        scrollTrigger: { trigger: ".ph-details", start: "top 80%", toggleActions: "play none none none" } });
 
       // Nav
       gsap.from(".ph-nav-link", { opacity: 0, y: 16, duration: 0.5, stagger: 0.1, ease: "power3.out",
-        scrollTrigger: { trigger: ".ph-nav", start: "top 90%", once: true } });
+        scrollTrigger: { trigger: ".ph-nav", start: "top 90%", toggleActions: "play none none none" } });
 
       // Runs on ctx.revert() (unmount / slug change).
       return cleanupImageLoad;
