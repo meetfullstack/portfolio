@@ -165,21 +165,28 @@ export default function Contact() {
               />
             </div>
 
-            <button
-              ref={btnRef}
-              type="submit"
-              disabled={pending}
-              onMouseEnter={handleBtnEnter}
-              onMouseLeave={handleBtnLeave}
-              onMouseDown={handleBtnDown}
-              onMouseUp={handleBtnUp}
-              // Same sharp, mono button system as the hero CTAs and project
-              // links — this was the only rounded/gradient button on the site.
-              className="btn btn--primary mt-2 self-start disabled:opacity-50"
-              style={{ willChange: "transform" }}
-            >
-              {pending ? "Sending..." : "Send message"}
-            </button>
+            {/* Same corner-bracket hover frame as the hero CTAs (CornerButton). */}
+            <span className="btn-frame mt-2 self-start">
+              <button
+                ref={btnRef}
+                type="submit"
+                disabled={pending}
+                onMouseEnter={handleBtnEnter}
+                onMouseLeave={handleBtnLeave}
+                onMouseDown={handleBtnDown}
+                onMouseUp={handleBtnUp}
+                // Same sharp, mono button system as the hero CTAs and project
+                // links — this was the only rounded/gradient button on the site.
+                className="btn btn--primary disabled:opacity-50"
+                style={{ willChange: "transform" }}
+              >
+                {pending ? "Sending..." : "Send message"}
+              </button>
+              <span className="btn-corner btn-corner--tl" aria-hidden="true" />
+              <span className="btn-corner btn-corner--tr" aria-hidden="true" />
+              <span className="btn-corner btn-corner--bl" aria-hidden="true" />
+              <span className="btn-corner btn-corner--br" aria-hidden="true" />
+            </span>
           </form>
         </div>
       </div>

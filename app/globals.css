@@ -1142,6 +1142,23 @@ html.lenis body {
   object-fit: contain;
 }
 
+/* Real logos are printed on white (HNGU is black line art that would vanish
+   on the dark badge). They fill the whole tile edge to edge. */
+/* Block, not grid: a grid's auto row grows to the image's own ratio, so
+   height:100% tracked the image instead of the tile. As a block, 100% is the
+   tile's fixed size and object-fit does the fitting. */
+.about-edu-logo:has(img) {
+  display: block;
+  background: #fff;
+}
+
+.about-edu-logo:has(img) img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 @media (max-width: 599px) {
   .about-edu {
     grid-template-columns: 40px minmax(0, 1fr);

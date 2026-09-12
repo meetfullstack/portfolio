@@ -15,6 +15,38 @@ export type ProjectDetail = {
 
 export const projects: ProjectDetail[] = [
   {
+    slug: "rubics",
+    title: "Rubics",
+    year: "2026",
+    role: "Designer & Developer",
+    category: "3D / Web",
+    subtitle: "Solve your real Rubik's cube step by step, or play one in 3D right in the browser.",
+    features: [
+      "Paint your cube's colors on an unfolded map",
+      "Validation with clear error messages",
+      "Kociemba two-phase solver in a Web Worker",
+      "Step-by-step 3D solution guide",
+      "Free-play cube: drag a sticker to turn its row",
+    ],
+    tech: ["Next.js", "TypeScript", "three.js", "Tailwind CSS", "GSAP"],
+    image: "/screenshots/rubics.png",
+    github: "https://github.com/meetfullstack/rubics",
+    content: [
+      {
+        heading: "What It Does",
+        body: "Rubics has two modes. Solve: enter the colors of your physical cube on an unfolded map and follow a short (around 20 move) solution one move at a time, with a 3D cube showing every turn. Play: a real-time 3D cube with animated turns, scrambling and a move counter — drag a sticker to turn its row, or drag the background to spin the view.",
+      },
+      {
+        heading: "How the Solver Works",
+        body: "Sticker colors are checked first — 9 of each color, every corner and edge a real piece, no twisted or swapped pieces — so mistakes get a clear message instead of a broken solve. Valid cubes are solved with Herbert Kociemba's two-phase algorithm running in a Web Worker, so the page never freezes. The 3D guide starts from your exact cube by applying the solution in reverse to a solved cube.",
+      },
+      {
+        heading: "Design Choices",
+        body: "Built with Next.js, TypeScript, Tailwind CSS and three.js in the same purple liquid-glass design as this portfolio. Controls use plain labels like Top, Front and Right instead of cube notation, so anyone can use it without learning U/D/L/R first.",
+      },
+    ],
+  },
+  {
     slug: "qa-automation-suite",
     title: "QA Automation Suite",
     year: "2024",
